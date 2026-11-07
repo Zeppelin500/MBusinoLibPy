@@ -58,35 +58,35 @@ def als_json(objekt) -> str:
     return json.dumps(objekt, indent=2, ensure_ascii=False) + "\n"
 
 
-def schreibe(pfad: str, inhalt: str, check: bool) -> bool:
+def write_file(pfad: str, content: str, check: bool) -> bool:
     """Write a file or (with --check) compare it against what is there.
 
     :return: True if identical or updated, False on a difference
     """
-    vorhanden = None
+    existing = None
     if os.path.exists(pfad):
         with open(pfad, encoding="utf-8") as handle:
-            vorhanden = handle.read()
-    if vorhanden == inhalt:
+            existing = handle.read()
+    if existing == content:
         return True
     if check:
-        print("  UNGLEICH: %s" % os.path.relpath(pfad, REPO))
+        print("  DIFFERS: %s" % os.path.relpath(pfad, REPO))
         return False
     with open(pfad, "w", encoding="utf-8", newline="") as handle:
-        handle.write(inhalt)
-    print("  geschrieben: %s" % os.path.relpath(pfad, REPO))
+        handle.write(content)
+    print("  written: %s" % os.path.relpath(pfad, REPO))
     return False
 
 
-def telegramme_erzeugen(harness: str, check: bool) -> bool:
+def generate_telegrams(harness: str, check: bool) -> bool:
     ok = True
     print("Telegram goldens (.hex -> .expected.json/.raw.txt):")
-    for hex_pfad in sorted(glob.glob(os.path.join(GOLDEN, "*.hex"))):
-        name = os.path.basename(hex_pfad)[:-4]
-        with open(hex_pfad, encoding="ascii") as handle:
+    for hex_path in sorted(glob.glob(os.path.join(GOLDEN, "*.hex"))):
+        name = os.path.basename(hex_path)[:-4]
+        with open(hex_path, encoding="ascii") as handle:
             hex_text = handle.read().strip()
-        ausgabe = run(harness, hex_text)
-        match = _TELEGRAM_RE.search(ausgabe)
+        output = run(harness, hex_text)
+        match = _TELEGRAM_RE.search(output)
         if not match:
             raise SystemExit("%s: output not parseable (buffer too small?)" % name)
         record_list = json.loads(match.group(4))
@@ -97,15 +97,15 @@ def telegramme_erzeugen(harness: str, check: bool) -> bool:
                 "jsonBuf[4096]). Use a wrapper with a larger buffer, see "
                 "tools/README.md." % (name, match.group(2), len(record_list))
             )
-        erwartet = {
+        expected = {
             "slave_address": int(match.group(1)),
             "records_decoded": int(match.group(2)),
             "error_code": int(match.group(3)),
             "records": record_list,
         }
-        ok &= schreibe(os.path.join(GOLDEN, name + ".expected.json"),
-                       als_json(erwartet), check)
-        ok &= schreibe(os.path.join(GOLDEN, name + ".raw.txt"), ausgabe, check)
+        ok &= write_file(os.path.join(GOLDEN, name + ".expected.json"),
+                       als_json(expected), check)
+        ok &= write_file(os.path.join(GOLDEN, name + ".raw.txt"), output, check)
     return ok
 
 
@@ -115,8 +115,8 @@ def header_erzeugen(harness: str, check: bool) -> bool:
     for pfad in sorted(glob.glob(os.path.join(GOLDEN, "*.header.json"))):
         with open(pfad, encoding="utf-8") as handle:
             alt = json.load(handle)
-        ausgabe = run(harness, alt["hex"])
-        zeilen = ausgabe.splitlines()
+        output = run(harness, alt["hex"])
+        zeilen = output.splitlines()
         if not zeilen or not zeilen[0].startswith("header_ok:"):
             raise SystemExit("%s: output not parseable" % os.path.basename(pfad))
         header_ok = bool(int(zeilen[0].split(":", 1)[1].strip()))
@@ -135,7 +135,7 @@ def header_erzeugen(harness: str, check: bool) -> bool:
         # order as before: hex, header_ok, header, source
         reihenfolge = ["hex", "header_ok", "header", "source"]
         neu = {key: neu[key] for key in reihenfolge if key in neu}
-        ok &= schreibe(pfad, als_json(neu), check)
+        ok &= write_file(pfad, als_json(neu), check)
     return ok
 
 
@@ -145,8 +145,8 @@ def records_erzeugen(harness: str, check: bool) -> bool:
     for pfad in sorted(glob.glob(os.path.join(RECORDS, "*.json"))):
         with open(pfad, encoding="utf-8") as handle:
             alt = json.load(handle)
-        ausgabe = run(harness, alt["hex"])
-        match = _RECORD_RE.search(ausgabe)
+        output = run(harness, alt["hex"])
+        match = _RECORD_RE.search(output)
         if not match:
             raise SystemExit("%s: output not parseable" % os.path.basename(pfad))
         neu = {
@@ -156,7 +156,7 @@ def records_erzeugen(harness: str, check: bool) -> bool:
             "records": json.loads(match.group(3)),
             "source": alt.get("source", ""),
         }
-        ok &= schreibe(pfad, als_json(neu), check)
+        ok &= write_file(pfad, als_json(neu), check)
     return ok
 
 
@@ -177,7 +177,7 @@ def main() -> int:
         binaires[name] = pfad
 
     alles_ok = True
-    alles_ok &= telegramme_erzeugen(binaires["test_decode"], args.check)
+    alles_ok &= generate_telegrams(binaires["test_decode"], args.check)
     alles_ok &= header_erzeugen(binaires["test_decode_header"], args.check)
     alles_ok &= records_erzeugen(binaires["test_decode_records"], args.check)
 

@@ -47,7 +47,7 @@ from .lookup_tables import (
 from .vif_defs import VIF_DEFS
 
 # ---------------------------------------------------------------------------
-# NEW (not present in MBusinoLib): readable German error messages
+# NEW (not present in MBusinoLib): readable error messages
 # ---------------------------------------------------------------------------
 # Mapping follows the `enum MBUS_ERROR` from MBusinoLib.h line 185-192.
 # UNSUPPORTED_CODING / UNSUPPORTED_RANGE / NEGATIVE_VALUE are leftovers
@@ -55,25 +55,25 @@ from .vif_defs import VIF_DEFS
 # (proof: the only error assignments in MBusinoLib.cpp are lines 226,
 # 283 and 382), but they are listed here for completeness.
 _ERROR_MESSAGES = {
-    MBUS_ERROR.NO_ERROR: "Kein Fehler.",
+    MBUS_ERROR.NO_ERROR: "No error.",
     MBUS_ERROR.BUFFER_OVERFLOW: (
-        "Puffer zu klein oder Telegramm unvollstaendig: Die deklarierte Laenge "
-        "passt nicht in die uebergebenen Daten, oder ein Datensatz wuerde ueber "
-        "das Ende des Puffers hinaus."
+        "Buffer too small or telegram incomplete: the declared length does not "
+        "fit into the given data, or a record would run past the end of the "
+        "buffer."
     ),
     MBUS_ERROR.UNSUPPORTED_CODING: (
-        "Nicht unterstuetzte Datenkodierung (DIF-Kodierung)."
+        "Unsupported data coding (DIF coding)."
     ),
     MBUS_ERROR.UNSUPPORTED_RANGE: (
-        "Nicht unterstuetzter Wertebereich: Kombination aus Code und Skalierung "
-        "nicht darstellbar."
+        "Unsupported value range: combination of code and scaling not "
+        "representable."
     ),
     MBUS_ERROR.UNSUPPORTED_VIF: (
-        "Unbekannter oder nicht unterstuetzter VIF - der Datensatz koennte keiner "
-        "Definition aus vif_defs zugeordnet werden."
+        "Unknown or unsupported VIF - the record could not be matched to any "
+        "definition in vif_defs."
     ),
     MBUS_ERROR.NEGATIVE_VALUE: (
-        "Negativer Wert, der vom Original nicht unterstuetzt wird."
+        "Negative value, which is not supported by the original."
     ),
 }
 
@@ -176,10 +176,10 @@ class MBusinoLib:
         if code is None:
             code = self._error
         try:
-            return _ERROR_MESSAGES.get(MBUS_ERROR(code), "Unbekannter Fehlercode %s." % code)
+            return _ERROR_MESSAGES.get(MBUS_ERROR(code), "Unknown error code %s." % code)
         except ValueError:
             # Value outside the enum (e.g. a raw/error value from somewhere else)
-            return "Unbekannter Fehlercode %s." % code
+            return "Unknown error code %s." % code
 
     # ------------------------------------------------------------------
     # Lookup tables (correspond to the four C++ switch methods)
@@ -479,7 +479,7 @@ class MBusinoLib:
                 name_extension = ""                 # C++: char stringNameExtension[10]
                 no_unit = False                     # C++: bool noUnit
 
-                if vifcounter - 1 > 0:  # mindestens eine VIFE vorhanden
+                if vifcounter - 1 > 0:  # at least one VIFE present
                     if (
                         vifarray[0] == 0xFB
                         or (vifarray[0] == 0xFD and vifarray[1] != 0xFD)
@@ -986,7 +986,7 @@ class MBusinoLib:
         records: list = []
 
         if too_short:
-            frame_error = "Telegramm zu kurz: %d Bytes, mindestens 6 werden benoetigt." % byte_count
+            frame_error = "Telegram too short: %d bytes, at least 6 required." % byte_count
             error = MBUS_ERROR.BUFFER_OVERFLOW
         else:
             # packet size: 68 | LL | LL | 68 | C | A | CI | data | CHK | 16
@@ -1012,18 +1012,18 @@ class MBusinoLib:
 
             # --- name the first problem --------------------------------
             if not start_ok:
-                frame_error = "Startbyte unerwartet: 0x%02X/0x%02X statt 0x68/0x68." % (data[0], data[3])
+                frame_error = "Unexpected start byte: 0x%02X/0x%02X instead of 0x68/0x68." % (data[0], data[3])
             elif not length_ok:
-                frame_error = "Laengenfelder ungleich: L1=0x%02X, L2=0x%02X." % (data[1], data[2])
+                frame_error = "Length fields differ: L1=0x%02X, L2=0x%02X." % (data[1], data[2])
             elif not fits:
-                frame_error = ("Deklarierte Laenge %d erwartet %d Bytes, "
-                               "aber nur %d Bytes vorhanden." % (data[1], packet_size, byte_count))
+                frame_error = ("Declared length %d expects %d bytes, "
+                               "but only %d bytes present." % (data[1], packet_size, byte_count))
                 error = MBUS_ERROR.BUFFER_OVERFLOW
             elif not stop_ok:
-                frame_error = "Stopbyte fehlt: 0x%02X statt 0x16." % data[packet_size - 1]
+                frame_error = "Stop byte missing: 0x%02X instead of 0x16." % data[packet_size - 1]
             elif not checksum_ok and not quartet_checksum_ok:
-                frame_error = ("Checksumme stimmt nicht ueberein: erwartet 0x%02X, "
-                               "erhalten 0x%02X." % (checksum, checksum_received))
+                frame_error = ("Checksum mismatch: expected 0x%02X, "
+                               "received 0x%02X." % (checksum, checksum_received))
 
             # --- decode (like test_decode.cpp, independent of -----------
             #     start byte/checksum - the original does not check those) ----
@@ -1039,13 +1039,13 @@ class MBusinoLib:
             error = int(error)
 
         # Error message: the text of an MBUS_ERROR if there is one, otherwise
-        # the frame hint - "Kein Fehler" only when everything really fitted.
+        # the frame hint - "No error" only when everything really fitted.
         if error != MBUS_ERROR.NO_ERROR:
             error_message = self.get_error_message(error)
         elif frame_error:
             error_message = frame_error
         else:
-            error_message = "Kein Fehler"
+            error_message = "No error"
 
         frame = {
             "byte_count": byte_count,

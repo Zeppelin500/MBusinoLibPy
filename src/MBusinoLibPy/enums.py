@@ -133,7 +133,7 @@ class MBUS_CODE(IntEnum):
     HEAT_ALARM_STATUS = 101
     DOOR_WINDOW_SENS_STATUS = 102
 
-    # VIFE 0xFB: internationale Einheiten / abweichende Skalierung
+    # VIFE 0xFB: international units / different scaling
     REACTIVE_ENERGY = 103
     REACTIVE_POWER = 104
     RELATIVE_HUMIDITY = 105

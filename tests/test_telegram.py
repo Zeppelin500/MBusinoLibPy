@@ -49,8 +49,8 @@ class TestDecodeTelegramHappyPath(unittest.TestCase):
                 self.assertEqual(frame["c_field"], data[4])
                 self.assertEqual(frame["ci_field"], data[6])
                 # checksum like EN 13757: sum from the C field up to before the checksum
-                erwartet = sum(data[4:packet_size - 2]) & 0xFF
-                self.assertEqual(frame["checksum"], erwartet)
+                expected = sum(data[4:packet_size - 2]) & 0xFF
+                self.assertEqual(frame["checksum"], expected)
                 self.assertEqual(frame["checksum_received"], data[packet_size - 2])
 
                 # records must match the telegram golden
@@ -80,7 +80,7 @@ class TestDecodeTelegramHappyPath(unittest.TestCase):
     def test_error_and_message_for_clean_telegram(self):
         result = MBusinoLib().decode_telegram(_by_name("efe_heat_meter")["_hex"])
         self.assertEqual(result["error"], int(MBUS_ERROR.NO_ERROR))
-        self.assertEqual(result["error_message"], "Kein Fehler")
+        self.assertEqual(result["error_message"], "No error")
         self.assertTrue(result["frame"]["ok"])
         self.assertEqual(result["frame"]["error_message"], "")
 
@@ -99,7 +99,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertIsNone(result["frame"]["slave_address"])
         self.assertEqual(result["header"], {})
         self.assertEqual(result["records"], [])
-        self.assertIn("zu kurz", result["frame"]["error_message"])
+        self.assertIn("too short", result["frame"]["error_message"])
         self.assertEqual(result["error_message"],
                          MBusinoLib().get_error_message(MBUS_ERROR.BUFFER_OVERFLOW))
 
@@ -109,7 +109,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         result = MBusinoLib().decode_telegram(bytes(data))
         self.assertFalse(result["frame"]["start_ok"])
         self.assertFalse(result["frame"]["ok"])
-        self.assertIn("Startbyte", result["frame"]["error_message"])
+        self.assertIn("Unexpected start byte", result["frame"]["error_message"])
         # without 0x68 the header cannot be read (C++ returns false) ...
         self.assertEqual(result["header"], {})
         # ... the records are read anyway, like in the original
@@ -129,7 +129,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         result = MBusinoLib().decode_telegram(bytes(data))
         self.assertFalse(result["frame"]["length_ok"])
         self.assertFalse(result["frame"]["ok"])
-        self.assertIn("Laengenfelder ungleich", result["frame"]["error_message"])
+        self.assertIn("Length fields differ", result["frame"]["error_message"])
         self.assertEqual(result["header"], {})   # C++: false before writing
 
     def test_declared_length_exceeds_buffer(self):
@@ -145,7 +145,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertEqual(result["header"], {})
         self.assertEqual(result["error_message"],
                          MBusinoLib().get_error_message(MBUS_ERROR.BUFFER_OVERFLOW))
-        self.assertIn("erwartet 86 Bytes", result["frame"]["error_message"])
+        self.assertIn("expects 86 bytes", result["frame"]["error_message"])
 
     def test_wrong_stop_byte(self):
         data = self._elster()
@@ -153,7 +153,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         result = MBusinoLib().decode_telegram(bytes(data))
         self.assertFalse(result["frame"]["stop_ok"])
         self.assertFalse(result["frame"]["ok"])
-        self.assertIn("Stopbyte", result["frame"]["error_message"])
+        self.assertIn("Stop byte missing", result["frame"]["error_message"])
         # decoding continues (the original does not check the stop byte)
         self.assertEqual(len(result["records"]), 2)
 
@@ -166,7 +166,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertFalse(frame["ok"])
         self.assertEqual(frame["checksum"], 0xCF)
         self.assertEqual(frame["checksum_received"], 0xCC)
-        self.assertIn("Checksumme", frame["error_message"])
+        self.assertIn("Checksum mismatch", frame["error_message"])
         # error code stays 0: MBUS_ERROR has no checksum code,
         # error_message reports the problem anyway (see docstring)
         self.assertEqual(result["error"], int(MBUS_ERROR.NO_ERROR))
@@ -185,7 +185,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertFalse(result["frame"]["checksum_ok"])
         self.assertTrue(result["frame"]["quartet_checksum_ok"])
         self.assertTrue(result["frame"]["ok"])
-        self.assertEqual(result["error_message"], "Kein Fehler")
+        self.assertEqual(result["error_message"], "No error")
 
     def test_hex_string_input(self):
         """Hex text like in the harness (spaces, commas, 0x prefixes)."""

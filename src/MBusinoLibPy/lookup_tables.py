@@ -778,5 +778,5 @@ MEDIUM_NAMES = {
     0x16: "Cold water",
     0x17: "Dual water",
     0x37: "Radio converter",
-    # default (alle anderen Codes) -> "Unknown"
+    # default (all other codes) -> "Unknown"
 }

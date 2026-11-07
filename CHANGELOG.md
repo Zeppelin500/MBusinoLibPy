@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 The version number tracks the C++ library it was ported from, so **0.10.0**
 means "port of MBusinoLib 0.10.0".
 
+## [Unreleased]
+
+### Changed
+
+- All runtime error messages (`get_error_message()`, the `decode_telegram()`
+  frame hints) are now English instead of German, and the last German
+  identifiers/comments in tests and tools were translated — everything on
+  GitHub is English now.
+
 ## [0.10.0] - 2026-11-07
 
 Initial Python port of [MBusinoLib 0.10.0](https://github.com/Zeppelin500/MBusinoLib).

@@ -51,7 +51,7 @@ telegram = bytes.fromhex(
 decode = MBusinoLib()
 result = decode.decode_telegram(telegram)
 
-print(result["frame"]["ok"], result["error_message"])   # True Kein Fehler
+print(result["frame"]["ok"], result["error_message"])   # True No error
 print(result["header"]["manufacturer"], result["header"]["id"])   # EFE 73753409
 print(result["header"]["medium"])                      # Heat (Mass)
 

@@ -29,7 +29,7 @@ class TestEnums(unittest.TestCase):
     def test_mbus_code_values(self):
         """C++ enums without explicit values count 0,1,2,... in declaration
         order (MBusinoLib.h line 37-165)."""
-        erwartet = {
+        expected = {
             "UNKNOWN_VIF": 0,            # erster Eintrag
             "ENERGY_WH": 1,              # MBusinoLib.h line 41
             "VOLUME_M3": 3,              # line 43
@@ -45,16 +45,16 @@ class TestEnums(unittest.TestCase):
             "CUSTOMIZED_VIF": 121,       # line 176 - Beginn "VIFE 0xFC"
             "MANUFACTURER_SPECIFIC": 122 # line 180 - letzter Eintrag
         }
-        for name, wert in erwartet.items():
+        for name, value in expected.items():
             with self.subTest(code=name):
-                self.assertEqual(int(getattr(MBUS_CODE, name)), wert)
+                self.assertEqual(int(getattr(MBUS_CODE, name)), value)
 
     def test_mbus_code_count(self):
         self.assertEqual(len(MBUS_CODE), 123)
 
     def test_mbus_error_values(self):
         """C++ (MBusinoLib.h line 185-192): NO_ERROR=0 ... NEGATIVE_VALUE=5."""
-        erwartet = {
+        expected = {
             "NO_ERROR": 0,
             "BUFFER_OVERFLOW": 1,
             "UNSUPPORTED_CODING": 2,
@@ -62,8 +62,8 @@ class TestEnums(unittest.TestCase):
             "UNSUPPORTED_VIF": 4,
             "NEGATIVE_VALUE": 5,
         }
-        for name, wert in erwartet.items():
-            self.assertEqual(int(getattr(MBUS_ERROR, name)), wert, name)
+        for name, value in expected.items():
+            self.assertEqual(int(getattr(MBUS_ERROR, name)), value, name)
         self.assertEqual(len(MBUS_ERROR), 6)
 
     def test_enums_behave_like_ints(self):
@@ -86,7 +86,7 @@ class TestVifDefs(unittest.TestCase):
         self.assertEqual(tuple(VIF_DEFS[-1]), (MBUS_CODE.MANUFACTURER_SPECIFIC, 0xFF00, 254, 0))
 
     def test_known_entries(self):
-        erwartet = [
+        expected = [
             # (code, base, size, scalar)  -  MBusinoLib.h line ...
             ((MBUS_CODE.ENERGY_WH, 0x00, 8, -3), 183),        # Energieskala -3
             ((MBUS_CODE.ENERGY_J, 0x08, 8, 0), 184),
@@ -103,10 +103,10 @@ class TestVifDefs(unittest.TestCase):
             ((MBUS_CODE.RELATIVE_HUMIDITY, 0xFB1A, 2, -1), 289),
             ((MBUS_CODE.CUSTOMIZED_VIF, 0xFC00, 254, 0), 341),
         ]
-        for erwarteter_eintrag, zeile in erwartet:
-            with self.subTest(eintrag=erwarteter_eintrag):
-                self.assertIn(tuple(erwarteter_eintrag), VIF_DEFS,
-                              "not found (C++ MBusinoLib.h line %d)" % zeile)
+        for expected_entry, line in expected:
+            with self.subTest(entry=expected_entry):
+                self.assertIn(tuple(expected_entry), VIF_DEFS,
+                              "not found (C++ MBusinoLib.h line %d)" % line)
 
 
 class TestFindDefinition(unittest.TestCase):
@@ -144,7 +144,7 @@ class TestGetVif(unittest.TestCase):
     AUnit expectations `Get_VIF` (test.cpp line 247-254)."""
 
     def test_aunit_values(self):
-        erwartet = [
+        expected = [
             (-4, 0xFF),   # outside the ENERGY_WH definition -> "not a valid VIF"
             (-3, 0x00),
             (0, 0x03),
@@ -154,9 +154,9 @@ class TestGetVif(unittest.TestCase):
             (6, 0xFB01),
             (7, 0xFF),    # outside again
         ]
-        for scalar, wert in erwartet:
+        for scalar, value in expected:
             with self.subTest(scalar=scalar):
-                self.assertEqual(MBusinoLib._get_vif(MBUS_CODE.ENERGY_WH, scalar), wert)
+                self.assertEqual(MBusinoLib._get_vif(MBUS_CODE.ENERGY_WH, scalar), value)
 
 
 class TestLookupTables(unittest.TestCase):
@@ -168,7 +168,7 @@ class TestLookupTables(unittest.TestCase):
 
     # ---- getCodeUnits (MBusinoLib.cpp line 660) -------------------------
     def test_code_units(self):
-        erwartet = [
+        expected = [
             (MBUS_CODE.ENERGY_WH, "Wh"),            # line 663
             (MBUS_CODE.VOLUME_M3, "m³"),            # line 669
             (MBUS_CODE.ON_TIME_S, "s"),             # line 672 (4 codes share "s")
@@ -184,9 +184,9 @@ class TestLookupTables(unittest.TestCase):
             (MBUS_CODE.PARTICLES_PM10_UG_M3, "µg/m³"),  # line 771
             (MBUS_CODE.DISTANCE_MM, "mm"),          # line 786
         ]
-        for code, einheit in erwartet:
+        for code, unit in expected:
             with self.subTest(code=code):
-                self.assertEqual(self.lib.get_code_units(code), einheit)
+                self.assertEqual(self.lib.get_code_units(code), unit)
 
     def test_code_units_null_for_codes_without_unit(self):
         """C++: `return 0;` -> NULL -> Python None (no entry in the table)."""
@@ -198,7 +198,7 @@ class TestLookupTables(unittest.TestCase):
 
     # ---- getCodeName (MBusinoLib.cpp line 847) --------------------------
     def test_code_name(self):
-        erwartet = [
+        expected = [
             (MBUS_CODE.UNKNOWN_VIF, "unknown_vif"),        # line 850
             (MBUS_CODE.ENERGY_WH, "energy"),               # line 853
             (MBUS_CODE.ENERGY_J, "energy"),                # gleiche Fallgruppe
@@ -215,7 +215,7 @@ class TestLookupTables(unittest.TestCase):
             (MBUS_CODE.PARTICLES_PM2_5_UG_M3, "particles_PM2,5"),  # line 1057
             (MBUS_CODE.POTENTIAL_HYDROGEN_PH, "PH"),        # line 1069
         ]
-        for code, name in erwartet:
+        for code, name in expected:
             with self.subTest(code=code):
                 self.assertEqual(self.lib.get_code_name(code), name)
 
@@ -225,7 +225,7 @@ class TestLookupTables(unittest.TestCase):
 
     # ---- getDeviceClass (MBusinoLib.cpp line 1182) ----------------------
     def test_device_class(self):
-        erwartet = [
+        expected = [
             (MBUS_CODE.ENERGY_WH, "energy"),           # line 1185
             (MBUS_CODE.MASS_KG, "weight"),             # line 1191
             (MBUS_CODE.OPERATING_TIME_DAYS, "duration"),  # line 1210
@@ -240,9 +240,9 @@ class TestLookupTables(unittest.TestCase):
             (MBUS_CODE.PARTICLES_PM10_UG_M3, "pm10"),  # line 1279
             (MBUS_CODE.RAINFALL_L_MM, "precipitation"),  # line 1281
         ]
-        for code, klasse in erwartet:
+        for code, expected_class in expected:
             with self.subTest(code=code):
-                self.assertEqual(self.lib.get_device_class(code), klasse)
+                self.assertEqual(self.lib.get_device_class(code), expected_class)
 
     def test_device_class_volume_depends_on_medium(self):
         """C++ line 1202-1206: VOLUME codes go through _volumeClassFromMedium
@@ -270,7 +270,7 @@ class TestLookupTables(unittest.TestCase):
 
     # ---- getStateClass (MBusinoLib.cpp line 1382) -----------------------
     def test_state_class(self):
-        erwartet = [
+        expected = [
             (MBUS_CODE.ENERGY_WH, "total_increasing"),    # line 1389
             (MBUS_CODE.VOLUME_M3, "total_increasing"),    # line 1391
             (MBUS_CODE.RAINFALL_L_MM, "total_increasing"),  # line 1397
@@ -285,9 +285,9 @@ class TestLookupTables(unittest.TestCase):
             (MBUS_CODE.MANUFACTURER, ""),                 # line 1483
             (MBUS_CODE.SPECIAL_SUPPLIER_INFO, ""),        # no case -> default
         ]
-        for code, klasse in erwartet:
+        for code, expected_class in expected:
             with self.subTest(code=code):
-                self.assertEqual(self.lib.get_state_class(code), klasse)
+                self.assertEqual(self.lib.get_state_class(code), expected_class)
 
     def test_state_class_default(self):
         self.assertEqual(self.lib.get_state_class(4242), "")
@@ -328,21 +328,21 @@ class TestTableIntegrity(unittest.TestCase):
         (Dicts cannot have duplicate keys by construction - a silent
         entry would be the only hint that something collapsed during the
         port, therefore checked against the C++ group count.)"""
-        erwartete_fallanzahl = [(CODE_NAME, 123, "getCodeName"),
+        expected_case_counts = [(CODE_NAME, 123, "getCodeName"),
                                 (CODE_UNITS, 79, "getCodeUnits"),
                                 (DEVICE_CLASS, 120, "getDeviceClass"),
                                 (STATE_CLASS, 122, "getStateClass"),
                                 (MEDIUM_NAMES, 20, "decodeHeader/Medium")]
-        for tabelle, anzahl, quelle in erwartete_fallanzahl:
-            with self.subTest(tabelle=quelle):
-                self.assertEqual(len(tabelle), anzahl)
-                for key, wert in tabelle.items():
-                    self.assertIsInstance(key, int if tabelle is MEDIUM_NAMES else MBUS_CODE)
-                    self.assertIsInstance(wert, str)
+        for table, count, source in expected_case_counts:
+            with self.subTest(table=source):
+                self.assertEqual(len(table), count)
+                for key, value in table.items():
+                    self.assertIsInstance(key, int if table is MEDIUM_NAMES else MBUS_CODE)
+                    self.assertIsInstance(value, str)
         # empty values are only allowed where C++ also returns ""
-        for tabelle in (CODE_NAME, CODE_UNITS, MEDIUM_NAMES):
-            for key, wert in tabelle.items():
-                self.assertNotEqual(wert, "", "C++ liefert hier keinen leeren String: %r" % key)
+        for table in (CODE_NAME, CODE_UNITS, MEDIUM_NAMES):
+            for key, value in table.items():
+                self.assertNotEqual(value, "", "C++ must not return an empty string here: %r" % key)
 
     def test_device_class_empty_values_exist(self):
         """getDeviceClass/getStateClass deliberately return "" (no HA class)."""
@@ -351,7 +351,7 @@ class TestTableIntegrity(unittest.TestCase):
 
     def test_medium_names_match_cpp_switch(self):
         """decodeHeader switch, MBusinoLib.cpp line 1610-1636."""
-        erwartet = {
+        expected = {
             0x01: "Oil", 0x02: "Electricity", 0x03: "Gas", 0x04: "Heat",
             0x05: "Steam", 0x06: "Warm Water", 0x07: "Water",
             0x08: "Heat Cost Allocator", 0x09: "Compressed Air",
@@ -361,7 +361,7 @@ class TestTableIntegrity(unittest.TestCase):
             0x14: "Calorific value", 0x15: "Hot water", 0x16: "Cold water",
             0x17: "Dual water", 0x37: "Radio converter",
         }
-        self.assertEqual(MEDIUM_NAMES, erwartet)
+        self.assertEqual(MEDIUM_NAMES, expected)
 
 
 if __name__ == "__main__":

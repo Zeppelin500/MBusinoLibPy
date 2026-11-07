@@ -38,10 +38,10 @@ class TestGoldenRecords(unittest.TestCase):
     def test_aunit_cases_covered(self):
         """The decoder tests from test.cpp are taken over completely."""
         names = {case["_name"] for case in golden_records()}
-        for erwartet in ("aunit_number_1", "aunit_number_2", "aunit_number_3",
+        for expected in ("aunit_number_1", "aunit_number_2", "aunit_number_3",
                          "aunit_number_4", "aunit_number_6", "aunit_multifield",
                          "aunit_decode_2bcd", "aunit_decode_8bcd"):
-            self.assertIn(erwartet, names)
+            self.assertIn(expected, names)
 
     def test_cpp_return_value_vs_json_array(self):
         """QUIRK: on error decodeRecords() returns 0 in C++,

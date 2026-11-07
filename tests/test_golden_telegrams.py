@@ -58,19 +58,19 @@ class TestGoldenTelegrams(unittest.TestCase):
 
     def test_record_keys_match_arduinojson_output(self):
         """The keys are identical to the ArduinoJson output of the original."""
-        erlaubt = {"vif", "code", "value_scaled", "value_string", "units",
+        allowed = {"vif", "code", "value_scaled", "value_string", "units",
                    "name", "subUnit", "storage", "tariff", "telegramFollow"}
-        gefunden = set()
+        found = set()
         for telegram in golden_telegrams():
             for record in telegram["records"]:
-                self.assertTrue(set(record) <= erlaubt,
-                                "unerwartete Keys: %s" % (set(record) - erlaubt))
-                gefunden |= set(record)
+                self.assertTrue(set(record) <= allowed,
+                                "unexpected keys: %s" % (set(record) - allowed))
+                found |= set(record)
         # make sure the golden data really covers all paths
-        for erwartet in ("vif", "code", "value_scaled", "name", "units",
+        for expected in ("vif", "code", "value_scaled", "name", "units",
                          "value_string", "subUnit", "storage"):
-            self.assertIn(erwartet, gefunden,
-                          "key %s does not appear in any golden telegram" % erwartet)
+            self.assertIn(expected, found,
+                          "key %s does not appear in any golden telegram" % expected)
 
     def test_known_values_from_reference_telegram(self):
         """A few fixed markers from the EFE heat meter (manufacturer/ID/medium)."""

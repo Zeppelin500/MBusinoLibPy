@@ -16,7 +16,7 @@ class TestGetError(unittest.TestCase):
     def test_initial_state_is_no_error(self):
         lib = MBusinoLib()
         self.assertEqual(lib.get_error(), int(MBUS_ERROR.NO_ERROR))
-        self.assertEqual(lib.get_error_message(), "Kein Fehler.")
+        self.assertEqual(lib.get_error_message(), "No error.")
 
     def test_get_error_clears_the_error(self):
         """Returns it, afterwards the error is gone - calling twice = 4, then 0."""
@@ -42,27 +42,27 @@ class TestGetError(unittest.TestCase):
         self.assertIn("VIF", nachricht)   # was not cleared
 
     def test_explicit_code_argument(self):
-        """Every enum value has a readable German message."""
+        """Every enum value has a readable English message."""
         lib = MBusinoLib()
         for code in MBUS_ERROR:
             with self.subTest(code=code.name):
-                meldung = lib.get_error_message(code)
-                self.assertTrue(meldung.strip())
-                self.assertTrue(meldung.endswith("."), "message does not end with a period")
+                message = lib.get_error_message(code)
+                self.assertTrue(message.strip())
+                self.assertTrue(message.endswith("."), "message does not end with a period")
         # check the key contents without fixing the exact wording
-        self.assertIn("Kein Fehler", lib.get_error_message(MBUS_ERROR.NO_ERROR))
+        self.assertIn("No error", lib.get_error_message(MBUS_ERROR.NO_ERROR))
         self.assertIn("VIF", lib.get_error_message(MBUS_ERROR.UNSUPPORTED_VIF))
-        self.assertIn("Puffer", lib.get_error_message(MBUS_ERROR.BUFFER_OVERFLOW))
+        self.assertIn("Buffer", lib.get_error_message(MBUS_ERROR.BUFFER_OVERFLOW))
         self.assertIn("DIF", lib.get_error_message(MBUS_ERROR.UNSUPPORTED_CODING))
-        self.assertIn("Skalierung", lib.get_error_message(MBUS_ERROR.UNSUPPORTED_RANGE))
-        self.assertIn("Negativ", lib.get_error_message(MBUS_ERROR.NEGATIVE_VALUE))
+        self.assertIn("scaling", lib.get_error_message(MBUS_ERROR.UNSUPPORTED_RANGE))
+        self.assertIn("Negative", lib.get_error_message(MBUS_ERROR.NEGATIVE_VALUE))
 
     def test_return_type_is_plain_int(self):
         lib = MBusinoLib()
-        wert = lib.get_error()
-        self.assertIsInstance(wert, int)
+        value = lib.get_error()
+        self.assertIsInstance(value, int)
         # comparisons with the enum still work (IntEnum)
-        self.assertEqual(wert, MBUS_ERROR.NO_ERROR)
+        self.assertEqual(value, MBUS_ERROR.NO_ERROR)
 
 
 class TestErrorPathsDuringDecode(unittest.TestCase):
@@ -106,7 +106,7 @@ class TestErrorPathsDuringDecode(unittest.TestCase):
 
     def test_get_error_message_for_unknown_code(self):
         lib = MBusinoLib()
-        self.assertIn("Unbekannter Fehlercode", lib.get_error_message(999))
+        self.assertIn("Unknown error code", lib.get_error_message(999))
 
 
 class TestEnumMirroring(unittest.TestCase):
