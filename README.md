@@ -280,9 +280,10 @@ C++ library* and committed under `tests/golden/`.
 values below 1e7 are printed with 6 decimals, larger ones with 9 significant
 digits (e.g. `202602132030` becomes `2.02602132e11`). Everything else -
 `name`, `units`, `value_string`, `vif`, `code`, `subUnit`, `storage`, `tariff`,
-`telegramFollow` and the key set itself - must match **exactly**. In practice
-the observed deviation is at most `7.3e-08` relative; 80 of 88 numeric values
-are bit-identical.
+`telegramFollow` and the key set itself - must match **exactly**. Measured
+over all 123 golden records: 89 of 102 numeric values are bit-identical, the
+largest deviation is `7.3e-08` relative (ArduinoJson rounds one date value),
+and there are zero key mismatches.
 
 How to regenerate the golden files is documented in
 [`tools/README.md`](tools/README.md).

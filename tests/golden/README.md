@@ -89,6 +89,7 @@ byte-identisch, was an den vier kürzeren Telegrammen nachgewiesen ist).
   (`ARDUINO_FLOAT_DECIMALS = 6`), weil ArduinoJson beim Serialisieren rundet:
   kleine Werte mit 6 Nachkommastellen, große mit 9 signifikanten Stellen
   (`202602132030` → `"2.02602132e11"`).
-  Gemessen wurde eine maximale Abweichung von `7.3e-08` relativ; 80 von 88
-  Zahlenwerten stimmen bit-identisch.
+  Über alle 123 verglichenen Golden-Datensätze gemessen: 89 von 102 Zahlen-
+  werten stimmen bit-identisch, größte Abweichung `7.3e-08` relativ
+  (ArduinoJson rundet hier einen Datumswert), null Key-Abweichungen.
 * Datensatzanzahl und Fehlercode müssen exakt übereinstimmen.
