@@ -1,43 +1,43 @@
-# tools - Golden-Dateien erzeugen / prüfen
+# tools - generating / checking the golden files
 
-Die Dateien unter `tests/golden/` stammen aus der **unveränderten
-C++-Bibliothek**. Dieses Verzeichnis enthält die drei kleinen Wrapper, mit
-denen sie erzeugt wurden, und das Skript, das alles neu anlegt.
+The files under `tests/golden/` come from the **unmodified C++ library**.
+This folder contains the three small wrappers used to produce them and the
+script that regenerates everything.
 
-> Die C++-Bibliothek selbst wird **nur gelesen** – nichts im Original-Repo
-> `MBusinoLib` wird verändert. Alle Binärdateien und Zwischenstände landen
-> außerhalb der Repos (Standard: `/tmp`).
+> The C++ library itself is only **read** - nothing in the original repo
+> `MBusinoLib` is modified. All binaries and intermediate files end up
+> outside the repos (default: `/tmp`).
 
-## Voraussetzungen
+## Requirements
 
-* `g++` (getestet mit 13.3)
-* die Header von [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
-  (hier: `~/Arduino/libraries/ArduinoJson`, Version 7.4.3)
-* das Original-Repo `MBusinoLib` mit `src/MBusinoLib.{h,cpp}` und dem
-  Stub `test/Arduino.h`
+* `g++` (tested with 13.3)
+* the headers of [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+  (here: `~/Arduino/libraries/ArduinoJson`, version 7.4.3)
+* the original repo `MBusinoLib` with `src/MBusinoLib.{h,cpp}` and the stub
+  `test/Arduino.h`
 
-## Die drei Hüllen
+## The three wrappers
 
-| Wrapper | liefert | Bemerkung |
-|---------|---------|-----------|
-| `test_decode` (Original, `MBusinoLib/test/test_decode`) | `.hex` → `.expected.json`, `.raw.txt` | wie im Original-Repo vorhanden |
-| `test_decode_header.cpp` | `.header.json` | nur `decodeHeader()` als JSON |
-| `test_decode_records.cpp` | `records/*.json` | Rohpuffer ohne Telegrammrahmen |
+| Wrapper | provides | Remark |
+|---------|----------|--------|
+| `test_decode` (original, `MBusinoLib/test/test_decode`) | `.hex` → `.expected.json`, `.raw.txt` | shipped in the original repo |
+| `test_decode_header.cpp` | `.header.json` | only `decodeHeader()` as JSON |
+| `test_decode_records.cpp` | `records/*.json` | raw buffers without a telegram frame |
 
-Alle drei rufen dieselbe `MBusinoLib.cpp` auf – es gibt keine eigene
-Dekodierlogik in den Wrappern.
+All three call the same `MBusinoLib.cpp` - there is no own decoding logic in
+the wrappers.
 
-### Bauen
+### Building
 
 ```bash
-SRC=$HOME/.openclaw/workspace/MBusinoLib        # C++-Original (nur lesen)
-AJ=$HOME/Arduino/libraries/ArduinoJson/src       # ArduinoJson-Header
+SRC=$HOME/.openclaw/workspace/MBusinoLib        # C++ original (read only)
+AJ=$HOME/Arduino/libraries/ArduinoJson/src       # ArduinoJson headers
 OUT=/tmp/mbusino-harness && mkdir -p "$OUT"
 
-# WICHTIG: -O0 und FORTIFY aus. Das Original kompiliert sonst mit
-# _FORTIFY_SOURCE und stürzt ab, weil MBusinoLib.cpp Zeile 535/546
-# snprintf(datestring, 24, ...) aufruft, obwohl datestring nur 16 Byte hat
-# (Bug im Original - der formatierte Text passt trotzdem immer hinein).
+# IMPORTANT: -O0 and FORTIFY disabled. Otherwise the original compiles with
+# _FORTIFY_SOURCE and aborts, because MBusinoLib.cpp lines 535/546 call
+# snprintf(datestring, 24, ...) while datestring is only 16 bytes
+# (bug in the original - the formatted text always fits anyway).
 CXXFLAGS="-std=gnu++11 -O0 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -w"
 
 g++ $CXXFLAGS -I"$SRC/src" -I"$SRC/test" -I"$AJ" \
@@ -47,15 +47,14 @@ g++ $CXXFLAGS -I"$SRC/src" -I"$SRC/test" -I"$AJ" \
     tools/test_decode_records.cpp "$SRC/src/MBusinoLib.cpp" -o "$OUT/test_decode_records"
 ```
 
-Der originale Harness wird einfach mitgeliefert (vorkompiliert):
-`$SRC/test/test_decode`.
+The original harness is used as it ships (pre-built): `$SRC/test/test_decode`.
 
-### Sonderfall `mbusino_example` (30 Datensätze)
+### Special case `mbusino_example` (30 records)
 
-`test_decode.cpp` puffert sein JSON in `char jsonBuf[4096]` und schneidet bei
-30 Datensätzen mitten im JSON ab (im Roh-Output steht danach Stack-Müll).
-Für dieses eine Telegramm wurde daher ein Wrapper mit `char jsonBuf[262144]`
-benutzt – sonst exakt dieselbe Datei:
+`test_decode.cpp` buffers its JSON in `char jsonBuf[4096]` and truncates in
+the middle of the JSON for 30 records (the raw output contains stack garbage
+afterwards). For this single telegram a wrapper with `char jsonBuf[262144]`
+was used - otherwise exactly the same file:
 
 ```bash
 sed -e 's/char jsonBuf\[4096\]/char jsonBuf[262144]/' \
@@ -64,27 +63,26 @@ g++ $CXXFLAGS -I"$SRC/src" -I"$SRC/test" -I"$AJ" \
     "$OUT/test_decode_big.cpp" "$SRC/src/MBusinoLib.cpp" -o "$OUT/test_decode_big"
 ```
 
-**Nachweis der Äquivalenz:** für die vier kürzeren Telegramme ist die Ausgabe
-von `test_decode` und `test_decode_big` per `diff` byte-identisch.
+**Proof of equivalence:** for the four shorter telegrams the output of
+`test_decode` and `test_decode_big` is byte-identical (`diff`).
 
-## Neu erzeugen
+## Regenerating
 
 ```bash
-# alle Golden-Dateien neu schreiben
+# rewrite all golden files
 python3 tools/make_golden.py --harness /tmp/mbusino-harness
 
-# nur prüfen, ohne etwas anzuschreiben
+# only verify, write nothing
 python3 tools/make_golden.py --harness /tmp/mbusino-harness --check
 ```
 
-Danach `python3 -m unittest` aus dem Repo-Wurzelverzeichnis – es muss
-weiterhin alles grün sein.
+Afterwards `python3 -m unittest` from the repository root - everything must
+still be green.
 
-## Aufbau der Hex-Eingabe
+## Hex input format
 
-Leerzeichen-getrennte Bytes, wie `test_decode` sie aus `argv` liest
-(`0x`-Präfixe und Kommas werden von `MBusinoLibPy._parse_hex` ebenfalls
-verstanden):
+Space separated bytes, the way `test_decode` reads them from `argv`
+(`0x` prefixes and commas are also accepted by `MBusinoLibPy._parse_hex`):
 
 ```
 68 LL LL 68 C A CI  ID ID ID ID  MAN MAN VER MED CNT ST  SIG L  ...  CHK 16

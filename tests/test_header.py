@@ -54,8 +54,8 @@ class TestGoldenHeader(unittest.TestCase):
 
     def test_header_ok_flag_matches_cxx_for_all_cases(self):
         """Additionally explicit: the key "id" marks the C++ true case."""
-        ok_fälle = [c for c in _header_golden() if c["header_ok"]]
-        self.assertGreaterEqual(len(ok_fälle), 5)
+        ok_cases = [c for c in _header_golden() if c["header_ok"]]
+        self.assertGreaterEqual(len(ok_cases), 5)
 
 
 class TestHeaderDetails(unittest.TestCase):

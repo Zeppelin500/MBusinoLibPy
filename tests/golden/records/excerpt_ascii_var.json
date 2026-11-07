@@ -10,5 +10,5 @@
       "name": "customer"
     }
   ],
-  "source": "Ausschnitt aus dem Elster-Telegramm (tests/golden/elster.hex, Bytes ab Offset 19)"
+  "source": "excerpt from the Elster telegram (tests/golden/elster.hex, bytes from offset 19)"
 }

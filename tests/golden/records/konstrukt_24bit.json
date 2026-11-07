@@ -11,5 +11,5 @@
       "name": "energy"
     }
   ],
-  "source": "konstruiert nach EN 13757 DIF 0x03 (24-Bit-Ganzzahl, LSB zuerst)"
+  "source": "constructed per EN 13757 DIF 0x03 (24-bit integer, LSB first)"
 }

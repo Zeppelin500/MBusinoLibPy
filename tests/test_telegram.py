@@ -129,7 +129,7 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         result = MBusinoLib().decode_telegram(bytes(data))
         self.assertFalse(result["frame"]["length_ok"])
         self.assertFalse(result["frame"]["ok"])
-        self.assertIn("Längenfelder ungleich", result["frame"]["error_message"])
+        self.assertIn("Laengenfelder ungleich", result["frame"]["error_message"])
         self.assertEqual(result["header"], {})   # C++: false before writing
 
     def test_declared_length_exceeds_buffer(self):

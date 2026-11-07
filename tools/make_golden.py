@@ -89,19 +89,19 @@ def telegramme_erzeugen(harness: str, check: bool) -> bool:
         match = _TELEGRAM_RE.search(ausgabe)
         if not match:
             raise SystemExit("%s: output not parseable (buffer too small?)" % name)
-        datensätze = json.loads(match.group(4))
-        if int(match.group(2)) != len(datensätze):
+        record_list = json.loads(match.group(4))
+        if int(match.group(2)) != len(record_list):
             raise SystemExit(
                 "%s: the harness reports %s records but only %d are in the "
                 "JSON - its buffer is too small (test_decode.cpp: char "
                 "jsonBuf[4096]). Use a wrapper with a larger buffer, see "
-                "tools/README.md." % (name, match.group(2), len(datensätze))
+                "tools/README.md." % (name, match.group(2), len(record_list))
             )
         erwartet = {
             "slave_address": int(match.group(1)),
             "records_decoded": int(match.group(2)),
             "error_code": int(match.group(3)),
-            "records": datensätze,
+            "records": record_list,
         }
         ok &= schreibe(os.path.join(GOLDEN, name + ".expected.json"),
                        als_json(erwartet), check)
@@ -120,9 +120,9 @@ def header_erzeugen(harness: str, check: bool) -> bool:
         if not zeilen or not zeilen[0].startswith("header_ok:"):
             raise SystemExit("%s: output not parseable" % os.path.basename(pfad))
         header_ok = bool(int(zeilen[0].split(":", 1)[1].strip()))
-        körperer = "\n".join(zeilen[1:]).strip()
+        body = "\n".join(zeilen[1:]).strip()
         try:
-            header = json.loads(körperer) if körperer.startswith("{") else {}
+            header = json.loads(body) if body.startswith("{") else {}
         except ValueError as fehler:
             raise SystemExit("%s: invalid JSON: %s" % (os.path.basename(pfad), fehler))
         neu = {

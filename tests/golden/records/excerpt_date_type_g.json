@@ -13,5 +13,5 @@
       "storage": 1
     }
   ],
-  "source": "Ausschnitt aus dem EFE-Wärmezähler (tests/golden/efe_heat_meter.hex)"
+  "source": "excerpt from the EFE heat meter (tests/golden/efe_heat_meter.hex)"
 }

@@ -11,5 +11,5 @@
       "name": "energy"
     }
   ],
-  "source": "Ausschnitt aus dem HW-Thermostat (tests/golden/hw_thermostat.hex): 09 00 42 F3"
+  "source": "excerpt from the HW thermostat (tests/golden/hw_thermostat.hex): 09 00 42 F3"
 }

@@ -255,7 +255,7 @@ class TestLookupTables(unittest.TestCase):
                 self.assertEqual(self.lib.get_device_class(code, 0x15), "water")  # Hot water
                 self.assertEqual(self.lib.get_device_class(code, 0x16), "water")  # Cold water
                 self.assertEqual(self.lib.get_device_class(code, 0x17), "water")  # Dual water
-                self.assertEqual(self.lib.get_device_class(code, 0x01), "volume") # Öl -> generisch
+                self.assertEqual(self.lib.get_device_class(code, 0x01), "volume") # oil -> generic
                 # Standardparameter 0xFF (unbekannt) -> generisch "volume"
                 self.assertEqual(self.lib.get_device_class(code), "volume")
                 self.assertEqual(self.lib.get_device_class(code, 0xFF), "volume")

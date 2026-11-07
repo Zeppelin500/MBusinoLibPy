@@ -4,11 +4,11 @@
   "declared_length": 31,
   "records": 2,
   "error_code": 0,
-  "checksum": "0xCC im Telegram, korrekt wäre 0xCF - UNGÜLTIG",
+  "checksum": "0xCC in the telegram, 0xCF would be correct - INVALID",
   "manufacturer": "ELS",
   "id": "12345678",
   "medium": "0x03 Gas",
   "address": 0,
-  "src": "MBusino/archive/telegram_test/telegram_test.ino:96 (auskommentiert, Zeilenkommentar \"Elster\")",
-  "note": "QUELLENFEHLER, absichtlich behalten: die Checksumme stimmt nicht (Summe der Bytes ab C-Feld ergibt 0xCF, im Telegram steht 0xCC - vermutlich ein Tippfehler beim Abtippen). Das C++-Original prüft keine Checksumme und dekodiert das Telegramm trotzdem; decode_telegram() meldet frame[\"ok\"] = False. Die ID 12345678 und der Kundenname \"123AB\" zeigen, dass es sich um ein Test-Telegramm handelt. Deckt den ASCII-Pfad (DIF 0x0D) ab."
+  "src": "MBusino/archive/telegram_test/telegram_test.ino:96 (commented out, line comment \"Elster\")",
+  "note": "SOURCE DEFECT, kept on purpose: the checksum does not match (the sum of the bytes from the C field yields 0xCF but the telegram contains 0xCC - probably a typo when it was copied). The C++ original does not check checksums and decodes it anyway; decode_telegram() reports it as frame[\"ok\"] = False. The ID 12345678 and the customer name \"123AB\" show that this is a test telegram. Covers the ASCII path (DIF 0x0D)."
 }

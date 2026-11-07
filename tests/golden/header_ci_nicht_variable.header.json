@@ -7,5 +7,5 @@
     "address": 0,
     "ci_field": 122
   },
-  "source": "Elster-Telegramm mit CI 0x7A statt 0x72 (nur Basisfelder, C++ gibt false zurück)"
+  "source": "Elster telegram with CI 0x7A instead of 0x72 (only basic fields, C++ returns false)"
 }

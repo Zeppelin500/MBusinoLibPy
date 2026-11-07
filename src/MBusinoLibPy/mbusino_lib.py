@@ -57,23 +57,23 @@ from .vif_defs import VIF_DEFS
 _ERROR_MESSAGES = {
     MBUS_ERROR.NO_ERROR: "Kein Fehler.",
     MBUS_ERROR.BUFFER_OVERFLOW: (
-        "Puffer zu klein oder Telegramm unvollständig: Die deklarierte Länge "
-        "passt nicht in die übergebenen Daten, oder ein Datensatz würde uber "
+        "Puffer zu klein oder Telegramm unvollstaendig: Die deklarierte Laenge "
+        "passt nicht in die uebergebenen Daten, oder ein Datensatz wuerde ueber "
         "das Ende des Puffers hinaus."
     ),
     MBUS_ERROR.UNSUPPORTED_CODING: (
-        "Nicht unterstützte Datenkodierung (DIF-Kodierung)."
+        "Nicht unterstuetzte Datenkodierung (DIF-Kodierung)."
     ),
     MBUS_ERROR.UNSUPPORTED_RANGE: (
-        "Nicht unterstützter Wertebereich: Kombination aus Code und Skalierung "
+        "Nicht unterstuetzter Wertebereich: Kombination aus Code und Skalierung "
         "nicht darstellbar."
     ),
     MBUS_ERROR.UNSUPPORTED_VIF: (
-        "Unbekannter oder nicht unterstützter VIF - der Datensatz könnte keiner "
+        "Unbekannter oder nicht unterstuetzter VIF - der Datensatz koennte keiner "
         "Definition aus vif_defs zugeordnet werden."
     ),
     MBUS_ERROR.NEGATIVE_VALUE: (
-        "Negativer Wert, der vom Original nicht unterstützt wird."
+        "Negativer Wert, der vom Original nicht unterstuetzt wird."
     ),
 }
 
@@ -986,7 +986,7 @@ class MBusinoLib:
         records: list = []
 
         if too_short:
-            frame_error = "Telegramm zu kurz: %d Bytes, mindestens 6 werden benötigt." % byte_count
+            frame_error = "Telegramm zu kurz: %d Bytes, mindestens 6 werden benoetigt." % byte_count
             error = MBUS_ERROR.BUFFER_OVERFLOW
         else:
             # packet size: 68 | LL | LL | 68 | C | A | CI | data | CHK | 16
@@ -1014,15 +1014,15 @@ class MBusinoLib:
             if not start_ok:
                 frame_error = "Startbyte unerwartet: 0x%02X/0x%02X statt 0x68/0x68." % (data[0], data[3])
             elif not length_ok:
-                frame_error = "Längenfelder ungleich: L1=0x%02X, L2=0x%02X." % (data[1], data[2])
+                frame_error = "Laengenfelder ungleich: L1=0x%02X, L2=0x%02X." % (data[1], data[2])
             elif not fits:
-                frame_error = ("Deklarierte Länge %d erwartet %d Bytes, "
+                frame_error = ("Deklarierte Laenge %d erwartet %d Bytes, "
                                "aber nur %d Bytes vorhanden." % (data[1], packet_size, byte_count))
                 error = MBUS_ERROR.BUFFER_OVERFLOW
             elif not stop_ok:
                 frame_error = "Stopbyte fehlt: 0x%02X statt 0x16." % data[packet_size - 1]
             elif not checksum_ok and not quartet_checksum_ok:
-                frame_error = ("Checksumme stimmt nicht überein: erwartet 0x%02X, "
+                frame_error = ("Checksumme stimmt nicht ueberein: erwartet 0x%02X, "
                                "erhalten 0x%02X." % (checksum, checksum_received))
 
             # --- decode (like test_decode.cpp, independent of -----------

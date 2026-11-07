@@ -11,5 +11,5 @@
       "name": "energy"
     }
   ],
-  "source": "konstruiert nach EN 13757 DIF 0x0D + LVAR C0..CF (positiv. BCD)"
+  "source": "constructed per EN 13757 DIF 0x0D + LVAR C0..CF (positive BCD)"
 }
