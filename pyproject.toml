@@ -38,8 +38,8 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/ZeppelinsBot/MBusinoLibPy"
-Source = "https://github.com/ZeppelinsBot/MBusinoLibPy"
+Homepage = "https://github.com/Zeppelin500/MBusinoLibPy"
+Source = "https://github.com/Zeppelin500/MBusinoLibPy"
 Original = "https://github.com/Zeppelin500/MBusinoLib"
 
 [tool.setuptools.packages.find]

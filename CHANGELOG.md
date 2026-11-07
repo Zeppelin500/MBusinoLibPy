@@ -74,4 +74,4 @@ Initial Python port of [MBusinoLib 0.10.0](https://github.com/Zeppelin500/MBusin
 - Known C++ quirks are preserved and documented in the source comments
   (see `src/MBusinoLibPy/mbusino_lib.py`).
 
-[0.10.0]: https://github.com/ZeppelinsBot/MBusinoLibPy/releases/tag/v0.10.0
+[0.10.0]: https://github.com/Zeppelin500/MBusinoLibPy/releases/tag/v0.10.0

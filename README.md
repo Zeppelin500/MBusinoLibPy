@@ -22,13 +22,13 @@ GPL-3.0).
 There is no PyPI package - install straight from GitHub:
 
 ```bash
-pip install git+https://github.com/ZeppelinsBot/MBusinoLibPy.git
+pip install git+https://github.com/Zeppelin500/MBusinoLibPy.git
 ```
 
 Working on the code itself? Use a development checkout:
 
 ```bash
-git clone https://github.com/ZeppelinsBot/MBusinoLibPy.git
+git clone https://github.com/Zeppelin500/MBusinoLibPy.git
 cd MBusinoLibPy
 pip install -e .
 ```
