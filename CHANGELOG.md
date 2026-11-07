@@ -8,6 +8,11 @@ means "port of MBusinoLib 0.10.0".
 
 ## [Unreleased]
 
+### Added
+
+- Runnable examples in `examples/` and doctest examples in the main docstrings
+  (covered by the test suite).
+
 ### Changed
 
 - Documentation restructured: README now targets end users, development notes
@@ -52,7 +57,7 @@ Initial Python port of [MBusinoLib 0.10.0](https://github.com/Zeppelin500/MBusin
 - `MEDIUM_NAMES` - the medium switch from `decodeHeader()`.
 - Golden test suite (`tests/`): five real telegrams, nine header cases and
   fourteen record buffers captured from the unmodified C++ library, plus table,
-  header, frame and error-code unit tests (75 tests, stdlib `unittest`).
+  header, frame and error-code unit tests (76 tests, stdlib `unittest`).
 - `tools/` - harness wrappers and the script used to regenerate the golden
   files.
 

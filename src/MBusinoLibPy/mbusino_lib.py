@@ -165,13 +165,20 @@ class MBusinoLib:
         return int(error)
 
     def get_error_message(self, code: int = None) -> str:
-        """NEW (not in C++): readable German error message.
+        """NEW (not in C++): readable English error message.
 
         Without an argument the method reports the currently stored error -
         unlike ``get_error()`` it clears nothing, so you can read
         ``get_error_message()`` first and ``get_error()`` afterwards.
 
         :param code: optional MBUS_ERROR value instead of the internal state
+
+        Example::
+
+            >>> MBusinoLib().get_error_message()
+            'No error.'
+            >>> MBusinoLib().get_error_message(4)   # MBUS_ERROR.UNSUPPORTED_VIF
+            'Unknown or unsupported VIF - the record could not be matched to any definition in vif_defs.'
         """
         if code is None:
             code = self._error
@@ -197,6 +204,13 @@ class MBusinoLib:
 
         :return: unit ("Wh", "m³", ...) or ``None`` - ``None`` corresponds to
                  the NULL pointer the original returns via ``return 0;``
+
+        Example::
+
+            >>> MBusinoLib().get_code_units(MBUS_CODE.VOLUME_M3)
+            'm³'
+            >>> MBusinoLib().get_code_units(MBUS_CODE.UNKNOWN_VIF) is None   # C++: return 0 / NULL
+            True
         """
         return CODE_UNITS.get(code)  # no entry -> None, just like in C++
 
@@ -207,6 +221,13 @@ class MBusinoLib:
         :param medium: M-Bus medium byte from ``decode_header()`` ("medium_code"),
                        default 0xFF = unknown - like the C++ default parameter
         :return: Home Assistant device_class, "" when none applies
+
+        Example (the medium byte selects water/gas for volume records)::
+
+            >>> MBusinoLib().get_device_class(MBUS_CODE.VOLUME_M3, medium=0x07)
+            'water'
+            >>> MBusinoLib().get_device_class(MBUS_CODE.VOLUME_M3, medium=0x03)
+            'gas'
         """
         # C++ line 1202-1206: the three volume codes call the medium helper
         # (case VOLUME_M3 / VOLUME_FT3 / VOLUME_GAL).
@@ -947,7 +968,7 @@ class MBusinoLib:
               "header": {...},         # result of decode_header()
               "records": [...],        # result of decode_records()
               "error": <int>,          # MBUS_ERROR code of the decoding step
-              "error_message": <str>   # German message for the first problem found
+              "error_message": <str>   # English message for the first problem found
             }
 
         ``frame`` contains ``byte_count``, ``packet_size``, ``slave_address``,
@@ -962,6 +983,14 @@ class MBusinoLib:
         ``error_message`` always names the first problem found - when only
         the checksum is wrong, ``error`` stays 0 but the message still
         describes the problem and ``frame["ok"]`` is ``False``.
+
+        Example - a minimal valid telegram, i.e. the smallest possible frame
+        ``68 0F 0F 68 | 08 00 72 | 12 header bytes | CHK 16`` (EFE heat meter
+        header, fixed header only, no records, checksum 0xC8 = byte sum)::
+
+            >>> hex_str = "68 0F 0F 68 08 00 72 09 34 75 73 C5 14 00 0D 43 00 00 00 C8 16"
+            >>> MBusinoLib().decode_telegram(hex_str)["frame"]["ok"]
+            True
         """
         data = bytes(raw) if not isinstance(raw, str) else _parse_hex(raw)
         # Clear the error before every new message - in C++ getError()

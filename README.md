@@ -65,6 +65,8 @@ A hex string works too (spaces, commas and `0x` prefixes are accepted):
 result = MBusinoLib().decode_telegram("68 1F 1F 68 08 00 72 78 56 34 ... CC 16")
 ```
 
+More runnable examples: [examples/](examples/).
+
 ## API reference
 
 All decoding entry points are methods of the `MBusinoLib` class.

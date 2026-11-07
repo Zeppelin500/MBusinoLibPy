@@ -263,7 +263,7 @@ enums in `MBusinoLib.h`. `VIF_DEFS` is the 1:1 copy of the `vif_defs` table
 ## Testing
 
 ```bash
-python3 -m unittest          # from the repository root (75 tests)
+python3 -m unittest          # from the repository root (76 tests)
 python3 -m pytest            # equivalent, if pytest is installed
 ```
 
