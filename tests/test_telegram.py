@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Tests für ``decode_telegram()`` - die NEUE Metode ohne C++-Gegenstück.
+"""Tests for ``decode_telegram()`` - the NEW method without a C++ counterpart.
 
-Sie packt den Ablauf aus ``test_decode.cpp`` (Rahmenprüfung, ``packet_size =
-data[1] + 6``, Datensätze ab Offset ``0x13``) um die Prüfungen, die dort
-NICHT gemacht werden: Start-/Stopbyte, Längenfelder und Checksumme.
+It wraps the flow of ``test_decode.cpp`` (frame check, ``packet_size =
+data[1] + 6``, records from offset ``0x13``) around the checks that are
+NOT done there: start/stop byte, length fields and checksum.
 """
 
 import json
@@ -28,7 +28,7 @@ def _hex_bytes(telegram):
 
 
 class TestDecodeTelegramHappyPath(unittest.TestCase):
-    """Alle fünf echten Golden-Telegramme."""
+    """All five real golden telegrams."""
 
     def test_frame_header_and_records_are_consistent(self):
         for telegram in golden_telegrams():
@@ -48,16 +48,16 @@ class TestDecodeTelegramHappyPath(unittest.TestCase):
                 self.assertEqual(frame["slave_address"], data[5])
                 self.assertEqual(frame["c_field"], data[4])
                 self.assertEqual(frame["ci_field"], data[6])
-                # Checksumme wie EN 13757: Summe ab C-Feld bis vor die Checksumme
+                # checksum like EN 13757: sum from the C field up to before the checksum
                 erwartet = sum(data[4:packet_size - 2]) & 0xFF
                 self.assertEqual(frame["checksum"], erwartet)
                 self.assertEqual(frame["checksum_received"], data[packet_size - 2])
 
-                # Datensätze müssen dem Telegramm-Golden entsprechen
+                # records must match the telegram golden
                 self.assertEqual(len(result["records"]), telegram["records_decoded"])
                 self.assertEqual(result["error"], telegram["error_code"])
 
-                # Kopf gegen das eigene Header-Golden
+                # header against its own header golden
                 header_golden = json.load(
                     open(os.path.join(GOLDEN_DIR, telegram["_name"] + ".header.json"),
                          encoding="utf-8")
@@ -65,8 +65,8 @@ class TestDecodeTelegramHappyPath(unittest.TestCase):
                 self.assertEqual(result["header"], header_golden["header"])
 
     def test_four_telegrams_have_valid_checksums(self):
-        """Vier der fünf Telegramme haben eine gültige Byte-Summe; das
-        Elster-Telegramm nicht (Tippfehler in der Quelle, s. source.json)."""
+        """Four of the five telegrams have a valid byte sum; the
+        Elster telegram does not (typo in the source, see source.json)."""
         ok, schlecht = [], []
         for telegram in golden_telegrams():
             result = MBusinoLib().decode_telegram(_hex_bytes(telegram))
@@ -86,7 +86,7 @@ class TestDecodeTelegramHappyPath(unittest.TestCase):
 
 
 class TestDecodeTelegramErrors(unittest.TestCase):
-    """Rahmenfehler - Start/Ende-Byte, Länge, Checksumme."""
+    """Frame errors - start/stop byte, length, checksum."""
 
     def _elster(self):
         return bytearray(_by_name("elster")["_hex"])
@@ -110,9 +110,9 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertFalse(result["frame"]["start_ok"])
         self.assertFalse(result["frame"]["ok"])
         self.assertIn("Startbyte", result["frame"]["error_message"])
-        # Ohne 0x68 kann der Header nicht gelesen werden (C++ gibt false aus) ...
+        # without 0x68 the header cannot be read (C++ returns false) ...
         self.assertEqual(result["header"], {})
-        # ... die Datensätze werden wie im Original trotzdem gelesen
+        # ... the records are read anyway, like in the original
         self.assertEqual(len(result["records"]), 2)
         self.assertEqual(result["error"], int(MBUS_ERROR.NO_ERROR))
         self.assertEqual(result["error_message"], result["frame"]["error_message"])
@@ -130,13 +130,13 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertFalse(result["frame"]["length_ok"])
         self.assertFalse(result["frame"]["ok"])
         self.assertIn("Längenfelder ungleich", result["frame"]["error_message"])
-        self.assertEqual(result["header"], {})   # C++: false vor dem Schreiben
+        self.assertEqual(result["header"], {})   # C++: false before writing
 
     def test_declared_length_exceeds_buffer(self):
-        """test_decode.cpp bricht mit "declared length ... but only N bytes" ab -
-        hier BUFFER_OVERFLOW, keine Dekodierung."""
-        data = self._elster()          # 37 Bytes, Länge-Feld 0x1F = 31
-        data[1] = data[2] = 0x50       # würde 86 Bytes Rahmen bedeuten
+        """test_decode.cpp aborts with "declared length ... but only N bytes" -
+        here BUFFER_OVERFLOW, no decoding."""
+        data = self._elster()          # 37 bytes, length field 0x1F = 31
+        data[1] = data[2] = 0x50       # would mean an 86 byte frame
         result = MBusinoLib().decode_telegram(bytes(data))
         self.assertFalse(result["frame"]["fits"])
         self.assertFalse(result["frame"]["ok"])
@@ -154,11 +154,11 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertFalse(result["frame"]["stop_ok"])
         self.assertFalse(result["frame"]["ok"])
         self.assertIn("Stopbyte", result["frame"]["error_message"])
-        # Dekodierung läuft weiter (das Original prüft das Stopbyte nicht)
+        # decoding continues (the original does not check the stop byte)
         self.assertEqual(len(result["records"]), 2)
 
     def test_wrong_checksum_is_reported_but_records_are_decoded(self):
-        """Das Elster-Telegramm trägt 0xCC, korrekt wäre 0xCF."""
+        """The Elster telegram carries 0xCC, 0xCF would be correct."""
         result = MBusinoLib().decode_telegram(_by_name("elster")["_hex"])
         frame = result["frame"]
         self.assertFalse(frame["checksum_ok"])
@@ -167,14 +167,14 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertEqual(frame["checksum"], 0xCF)
         self.assertEqual(frame["checksum_received"], 0xCC)
         self.assertIn("Checksumme", frame["error_message"])
-        # Fehlercode bleibt 0: MBUS_ERROR hat keinen Checksummen-Code,
-        # error_message meldet das Problem trotzdem (s. Docstring)
+        # error code stays 0: MBUS_ERROR has no checksum code,
+        # error_message reports the problem anyway (see docstring)
         self.assertEqual(result["error"], int(MBUS_ERROR.NO_ERROR))
         self.assertEqual(result["error_message"], frame["error_message"])
         self.assertEqual(len(result["records"]), 2)
 
     def test_quartet_checksum_is_accepted(self):
-        """Quartett-Summe (Summe aller Halbbytes) als gültige Alternative."""
+        """Quartet sum (sum of all half bytes) as a valid alternative."""
         data = self._elster()
         packet_size = data[1] + 6
         quartet = 0
@@ -188,22 +188,22 @@ class TestDecodeTelegramErrors(unittest.TestCase):
         self.assertEqual(result["error_message"], "Kein Fehler")
 
     def test_hex_string_input(self):
-        """Hex-Text wie im Harness (Leerzeichen, Kommata, 0x-Präfixe)."""
+        """Hex text like in the harness (spaces, commas, 0x prefixes)."""
         text = " ".join("0x%02X" % b for b in _by_name("elster")["_hex"])
         result = MBusinoLib().decode_telegram(text)
         self.assertEqual(len(result["records"]), 2)
-        # gleiche Ergebnis wie mit bytes
+        # same result as with bytes
         gleich = MBusinoLib().decode_telegram(_by_name("elster")["_hex"])
         self.assertEqual(result["records"], gleich["records"])
 
     def test_error_is_reset_between_calls(self):
-        """decode_telegram setzt den internen Fehler zurück (s. Docstring)."""
+        """decode_telegram clears the internal error (see docstring)."""
         lib = MBusinoLib()
-        # erst ein Telegramm mit Fehler
+        # first a telegram with an error
         kaputt = bytearray(_by_name("elster")["_hex"])
         kaputt[1] = kaputt[2] = 0x50
         lib.decode_telegram(bytes(kaputt))
-        # dann ein sauberes
+        # then a clean one
         result = lib.decode_telegram(_by_name("efe_heat_meter")["_hex"])
         self.assertEqual(result["error"], int(MBUS_ERROR.NO_ERROR))
         self.assertEqual(lib.get_error(), int(MBUS_ERROR.NO_ERROR))

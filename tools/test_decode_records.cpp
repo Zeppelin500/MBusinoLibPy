@@ -1,6 +1,6 @@
 /*
- * Record-Level Golden Harness (nur für die Portierung, nicht Teil der Repos)
- * Dekodiert ROHE Datensatz-Bytes (ohne Telegrammrahmen) und gibt das
+ * Record-level golden harness (only for the port, not part of the repos)
+ * Decodes RAW record bytes (without a telegram frame) and prints the
  * ArduinoJson-Array wie test_decode.cpp aus.
  *
  * Usage: ./test_decode_records "01 FB 01 C8"

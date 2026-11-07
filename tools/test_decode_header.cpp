@@ -1,6 +1,6 @@
 /*
- * Header-Golden Harness (nur für die Portierung, nicht Teil der Repos)
- * Liest ein Telegramm wie test_decode.cpp und gibt NUR decodeHeader() als JSON aus.
+ * Header golden harness (only for the port, not part of the repos)
+ * Reads a telegram like test_decode.cpp and prints ONLY decodeHeader() as JSON.
  * Usage: ./test_decode_header "68 56 56 68 ..."
  */
 #include <cstdio>

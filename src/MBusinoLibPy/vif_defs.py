@@ -1,32 +1,32 @@
 # -*- coding: utf-8 -*-
-"""vif_defs-Tabelle - 1:1-Port aus MBusinoLib.h Zeile 179-345.
+"""vif_defs table - 1:1 port from MBusinoLib.h line 179-345.
 
 Struktur pro Eintrag wie im C++ (`typedef struct { uint8_t code; uint32_t base;
 uint8_t size; int8_t scalar; } vif_def_type`):
 
     (code,   base, size, scalar)
      |       |     |     |
-     |       |     |     +-- Exponent der Skalierung: Wert = Rohwert * 10^scalar
-     |       |     +-------- Anzahl der aufeinanderfolgenden, gültigen Werte
-     |       +-------------- erstes Byte/Erweiterungs-Byte, das dieser Definition zugeordnet ist
-     +---------------------- MBUS_CODE-Enumwert, der für diese VIF-Kombination geliefert wird
+     |       |     |     +-- scaling exponent: value = raw * 10^scalar
+     |       |     +-------- number of consecutive valid values
+     |       +-------------- first byte/extension byte this definition belongs to
+     +---------------------- MBUS_CODE enum value delivered for this VIF combination
 
-Die Suche `_findDefinition(vif)` prüft `base <= vif < base + size` und liefert den
-ERSTEN Treffer - deshalb ist die Reihenfolge hier genauso wichtig wie im C++.
+The lookup `_findDefinition(vif)` checks `base <= vif < base + size` and returns the
+FIRST match - therefore the order here matters just as much as in C++.
 """
 
 from .enums import MBUS_CODE
 
-# Anzahl der Einträge, im C++: #define MBUS_VIF_DEF_NUM 132 (MBusinoLib.h Zeile 177)
+# Number of entries, in C++: #define MBUS_VIF_DEF_NUM 132 (MBusinoLib.h line 177)
 MBUS_VIF_DEF_NUM = 132
 
-# Reihenfolge und Werte unverändert aus MBusinoLib.h übernommen.
+# Order and values taken over unchanged from MBusinoLib.h.
 VIF_DEFS = (
     # C++-Kommentar: "0x7E is not used in direction Slave --> Master and
     # therefore misused as library failure hint." -> UNKNOWN_VIF
     (MBUS_CODE.UNKNOWN_VIF               , 0x7E    ,   1,    0),  # Fehlerhinweis-Eintrag
 
-    # --- ohne VIFE (Direkt-Codes) ---
+    # --- without VIFE (direct codes) ---
     (MBUS_CODE.ENERGY_WH                 , 0x0     ,   8,   -3),
     (MBUS_CODE.ENERGY_J                  , 0x8     ,   8,    0),
     (MBUS_CODE.VOLUME_M3                 , 0x10    ,   8,   -6),
@@ -170,5 +170,5 @@ VIF_DEFS = (
     (MBUS_CODE.MANUFACTURER_SPECIFIC     , 0xFF00  , 254,    0),
 )
 
-# Sicherheitsnetz: muss exakt der C++-Konstante entsprechen.
+# Safety net: must match the C++ constant exactly.
 assert len(VIF_DEFS) == MBUS_VIF_DEF_NUM, len(VIF_DEFS)

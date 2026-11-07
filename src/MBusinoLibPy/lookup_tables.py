@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Nachschlagetabellen für getCodeName()/getCodeUnits()/getDeviceClass()/getStateClass().
+"""Lookup tables for getCodeName()/getCodeUnits()/getDeviceClass()/getStateClass().
 
 Diese vier C++-switch-Anweisungen sind hier als Dicts 1:1 abgebildet - jede
-C++-Fallgruppe (mehrere `case` vor einem `return`) ist eine Gruppe von
-Dict-Einträgen mit Kommentarzeile. Fehlende Schlüssel bedeuten die
-C++-`default`-Rückgabe:
+Every C++ fall-through group (several `case` before one `return`) is a group of
+dict entries with a comment line. Missing keys mean the
+C++ `default` return:
 
-* CODE_UNITS: kein Eintrag -> C++ `return 0` (NULL) -> Python None
-* CODE_NAME / DEVICE_CLASS / STATE_CLASS: kein Eintrag -> C++ `return ""` -> Python ""
+* CODE_UNITS: no entry -> C++ `return 0` (NULL) -> Python None
+* CODE_NAME / DEVICE_CLASS / STATE_CLASS: no entry -> C++ `return ""` -> Python ""
 """
 
 from .enums import MBUS_CODE
 
 
 # ---------------------------------------------------------------------------
-# Hilfsfunktion aus MBusinoLib.cpp Zeile 1167: _volumeClassFromMedium()
-# (direkt von getDeviceClass() für die Volumen-Codes aufgerufen)
+# Helper function from MBusinoLib.cpp line 1167: _volumeClassFromMedium()
+# (called directly by getDeviceClass() for the volume codes)
 # ---------------------------------------------------------------------------
-# C++: switch (medium) mit den M-Bus-Medium-Codes aus decodeHeader().
+# C++: switch (medium) with the M-Bus medium codes from decodeHeader().
 _MEDIUM_TO_VOLUME_CLASS = {
     0x03: "gas",   # Gas
     0x06: "water",  # Warm Water
@@ -25,25 +25,25 @@ _MEDIUM_TO_VOLUME_CLASS = {
     0x15: "water",  # Hot water
     0x16: "water",  # Cold water
     0x17: "water",  # Dual water
-    # default: -> "volume" (unbekanntes Medium, alle übrigen, inkl. 0xFF)
+    # default: -> "volume" (unknown medium, everything else, incl. 0xFF)
 }
 
 
 def _volume_class_from_medium(medium: int) -> str:
-    """Entspricht _volumeClassFromMedium() in MBusinoLib.cpp Zeile 1167-1180.
+    """Corresponds to _volumeClassFromMedium() in MBusinoLib.cpp line 1167-1180.
 
-    Wählt das Home Assistant device_class für kumulative Volumen-Datensätze:
+    Picks the Home Assistant device_class for cumulative volume records:
     Wasser-Medien -> "water", Gas -> "gas", alles andere (inkl. 0xFF) -> "volume".
     """
     return _MEDIUM_TO_VOLUME_CLASS.get(medium, "volume")
 
 
 # ===========================================================================
-# getCodeUnits() - C++ MBusinoLib.cpp Zeile 660
+# getCodeUnits() - C++ MBusinoLib.cpp line 660
 # ===========================================================================
 CODE_UNITS = {
-    # Entspricht MBusinoLib::getCodeUnits() in MBusinoLib.cpp Zeile 660 (C++-switch mit Fallgruppen).
-    # Jede Kommentarzeile nennt die C++-Fallgruppe, folgende Zeilen sind deren case-Anweisungen.
+    # Corresponds to MBusinoLib::getCodeUnits() in MBusinoLib.cpp line 660 (C++ switch with fall-through groups).
+    # Every comment line names one C++ fall-through group, the lines below are its case statements.
     # C++: ENERGY_WH -> return "Wh"
     MBUS_CODE.ENERGY_WH: "Wh",
     # C++: ENERGY_J -> return "J"
@@ -175,16 +175,16 @@ CODE_UNITS = {
     # C++: DECIBEL_A -> return "dB"
     MBUS_CODE.DECIBEL_A: "dB",
 }
-# Hinweis: die 44 Enum-Codes ohne Eintrag liefern im C++ `return 0` (NULL),
-# z.B. UNKNOWN_VIF, ACCESS_NUMBER, MANUFACTURER - sie tragen keine Einheit.
+# Note: the 44 enum codes without an entry return `return 0` (NULL) in C++,
+# e.g. UNKNOWN_VIF, ACCESS_NUMBER, MANUFACTURER - they carry no unit.
 
 
 # ===========================================================================
-# getCodeName() - C++ MBusinoLib.cpp Zeile 847
+# getCodeName() - C++ MBusinoLib.cpp line 847
 # ===========================================================================
 CODE_NAME = {
-    # Entspricht MBusinoLib::getCodeName() in MBusinoLib.cpp Zeile 847 (C++-switch mit Fallgruppen).
-    # Jede Kommentarzeile nennt die C++-Fallgruppe, folgende Zeilen sind deren case-Anweisungen.
+    # Corresponds to MBusinoLib::getCodeName() in MBusinoLib.cpp line 847 (C++ switch with fall-through groups).
+    # Every comment line names one C++ fall-through group, the lines below are its case statements.
     # C++: UNKNOWN_VIF -> return "unknown_vif"
     MBUS_CODE.UNKNOWN_VIF: "unknown_vif",
     # C++: ENERGY_WH / ENERGY_J -> return "energy"
@@ -406,14 +406,14 @@ CODE_NAME = {
 
 
 # ===========================================================================
-# getDeviceClass() - C++ MBusinoLib.cpp Zeile 1182
+# getDeviceClass() - C++ MBusinoLib.cpp line 1182
 # ===========================================================================
-# ACHTUNG: die drei Volumen-Codes fehlen hier absichtlich - im C++ stehen sie
-# für den Wechsel auf _volumeClassFromMedium(medium); diese Sonderbehandlung
+# NOTE: the three volume codes are missing here on purpose - in C++ they
+# switch to _volumeClassFromMedium(medium); that special case lives
 # steckt in MBusinoLib.get_device_class().
 DEVICE_CLASS = {
-    # Entspricht MBusinoLib::getDeviceClass() in MBusinoLib.cpp Zeile 1182 (C++-switch mit Fallgruppen).
-    # Jede Kommentarzeile nennt die C++-Fallgruppe, folgende Zeilen sind deren case-Anweisungen.
+    # Corresponds to MBusinoLib::getDeviceClass() in MBusinoLib.cpp line 1182 (C++ switch with fall-through groups).
+    # Every comment line names one C++ fall-through group, the lines below are its case statements.
     # C++: ENERGY_WH / ENERGY_J -> return "energy"
     MBUS_CODE.ENERGY_WH: "energy",
     MBUS_CODE.ENERGY_J: "energy",
@@ -590,11 +590,11 @@ DEVICE_CLASS = {
 
 
 # ===========================================================================
-# getStateClass() - C++ MBusinoLib.cpp Zeile 1382
+# getStateClass() - C++ MBusinoLib.cpp line 1382
 # ===========================================================================
 STATE_CLASS = {
-    # Entspricht MBusinoLib::getStateClass() in MBusinoLib.cpp Zeile 1382 (C++-switch mit Fallgruppen).
-    # Jede Kommentarzeile nennt die C++-Fallgruppe, folgende Zeilen sind deren case-Anweisungen.
+    # Corresponds to MBusinoLib::getStateClass() in MBusinoLib.cpp line 1382 (C++ switch with fall-through groups).
+    # Every comment line names one C++ fall-through group, the lines below are its case statements.
     # C++: ENERGY_WH / ENERGY_J / VOLUME_M3 / VOLUME_FT3 / VOLUME_GAL / REACTIVE_ENERGY
     #      RAINFALL_L_MM / OPERATING_TIME_S / OPERATING_TIME_MIN / OPERATING_TIME_H
     #      OPERATING_TIME_DAYS / ON_TIME_S / ON_TIME_MIN / ON_TIME_H / ON_TIME_DAYS
@@ -749,13 +749,13 @@ STATE_CLASS = {
     MBUS_CODE.HEAT_ALARM_STATUS: "",
     MBUS_CODE.DOOR_WINDOW_SENS_STATUS: "",
 }
-# Hinweis: SPECIAL_SUPPLIER_INFO hat im C++-switch keinen eigenen case und fällt
-# über `default` auf "" - hier deshalb kein Eintrag, .get(code, "") liefert "".
+# Note: SPECIAL_SUPPLIER_INFO has no own case in the C++ switch and falls
+# through `default` to "" - therefore no entry here, .get(code, "") returns "".
 
 
 
 # ===========================================================================
-# decodeHeader() - Medium-Namen, C++ MBusinoLib.cpp Zeile 1610-1636
+# decodeHeader() - medium names, C++ MBusinoLib.cpp line 1610-1636
 # ===========================================================================
 MEDIUM_NAMES = {
     0x01: "Oil",

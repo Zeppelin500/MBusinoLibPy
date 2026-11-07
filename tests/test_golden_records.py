@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Golden-Tests für die DATENSEATZ-DEKODIERUNG (ohne Telegrammrahmen).
+"""Golden tests for RECORD decoding (without a telegram frame).
 
-Diese Fälle kommen aus zwei Quellen:
+These cases come from two sources:
 
-1. ``MBusinoLib/test/aunit/test.cpp`` - die Original-Decoder-Tests von AllWize,
-   die Rohpuffer statt eines ganzen Telegramms übergeben.
-2. Echte Datensatz-Ausschnitte aus den Golden-Telegrammen (z.B. das
-   ASCII-Datensatz-Stück des Elster-Zählers) sowie zwei bewusst konstruierte
-   Grenzfälle - alle mit Herkunft in der jeweiligen Golden-Datei.
+1. ``MBusinoLib/test/aunit/test.cpp`` - the original AllWize decoder tests,
+   which pass raw buffers instead of a whole telegram.
+2. Real record excerpts from the golden telegrams (e.g. the
+   ASCII record piece of the Elster meter) plus two deliberately
+   constructed edge cases - all with their origin in the respective file.
 
-Erzeugt mit dem C++-Harness ``test_decode_records`` (identische
+Produced with the C++ harness ``test_decode_records`` (identical
 MBusinoLib.cpp, eigener main()-Wrapper).
 """
 
@@ -21,7 +21,7 @@ from .helpers import compare_records, golden_records
 
 
 class TestGoldenRecords(unittest.TestCase):
-    """Rohdatensatz-Puffer gegen den C++-Referenz-Output."""
+    """Raw record buffer against the C++ reference output."""
 
     def test_all_record_goldens_match(self):
         for case in golden_records():
@@ -31,12 +31,12 @@ class TestGoldenRecords(unittest.TestCase):
                 records = decoder.decode_records(data)
                 error = decoder.get_error()
                 self.assertEqual(error, case["error_code"],
-                                 "Fehlercode weicht vom C++-Harness ab")
+                                 "error code differs from the C++ harness")
                 problems = compare_records(records, case["records"], case["_name"])
                 self.assertEqual(problems, [], "\n".join(problems))
 
     def test_aunit_cases_covered(self):
-        """Die Decoder-Tests aus test.cpp sind vollständig übernommen."""
+        """The decoder tests from test.cpp are taken over completely."""
         names = {case["_name"] for case in golden_records()}
         for erwartet in ("aunit_number_1", "aunit_number_2", "aunit_number_3",
                          "aunit_number_4", "aunit_number_6", "aunit_multifield",
@@ -44,35 +44,35 @@ class TestGoldenRecords(unittest.TestCase):
             self.assertIn(erwartet, names)
 
     def test_cpp_return_value_vs_json_array(self):
-        """QUIRK: Bei einem Fehler liefert decodeRecords() im C++ den Wert 0,
-        das JsonArray bleibt aber teilweise gefüllt.
+        """QUIRK: on error decodeRecords() returns 0 in C++,
+        but the JsonArray stays partially filled.
 
-        Python gibt den Inhalt des JsonArray zurück (das ist das, was der
-        C++-Harness auch als JSON ausgibt) - der Fehler steht in get_error().
+        Python returns the content of the JsonArray (that is what the
+        C++ harness prints as JSON) - the error is reported by get_error().
         """
         case = [c for c in golden_records() if c["_name"] == "konstrukt_var_bcd"][0]
         data = bytes(int(token, 16) for token in case["hex"].split())
         decoder = MBusinoLib()
         records = decoder.decode_records(data)
         self.assertEqual(decoder.get_error(), int(MBUS_ERROR.BUFFER_OVERFLOW))
-        # C++-Rückgabewert (Fehlerfall) ...
+        # C++ return value (error case) ...
         self.assertEqual(case["records_decoded"], 0)
-        # ... aber das JsonArray enthält den bereits decodierten Datensatz,
-        # und genau den liefert Python zurück:
+        # ... but the JsonArray holds the record already decoded,
+        # and that is exactly what Python returns:
         self.assertEqual(len(records), len(case["records"]))
         self.assertEqual(len(records), 1)
 
     def test_unsupported_vif_sets_error(self):
-        """0x7E ist der vom Original benutzte "unbekannt"-Hinweis; ein VIF
-        außerhalb aller Definitionen erzeugt UNSUPPORTED_VIF (C++ Zeile 281-285)."""
+        """0x7E is the "unknown" hint used by the original; a VIF
+        outside all definitions raises UNSUPPORTED_VIF (C++ line 281-285)."""
         # 0x6E = HCA - im Original in vif_defs auskommentiert (MBusinoLib.h
-        # Zeile 222: `//{ MBUS_CODE::HCA , 0x6E , 1, 0},`), also kein Treffer
+        # line 222: `//{ MBUS_CODE::HCA , 0x6E , 1, 0},`), therefore no match
         decoder = MBusinoLib()
         records = decoder.decode_records(bytes([0x01, 0x6E, 0x2A]))
         self.assertEqual(decoder.get_error(), int(MBUS_ERROR.UNSUPPORTED_VIF))
-        # Das Original läuft MIT Eintrag 0 weiter (def = 0), deshalb:
-        # unknown_vif, code 0 UND (weil def == 0) kein Scaling - der Wert
-        # bleibt der rohe 42 (C++ Zeile 586: `if(def != 0)` greift nicht)
+        # The original CONTINUES with entry 0 (def = 0), therefore:
+        # unknown_vif, code 0 AND (because def == 0) no scaling - the value
+        # stays the raw 42 (C++ line 586: `if(def != 0)` does not apply)
         self.assertEqual(records[0]["name"], "unknown_vif")
         self.assertEqual(records[0]["code"], 0)
         self.assertEqual(records[0]["vif"], "0x6e")
@@ -80,17 +80,17 @@ class TestGoldenRecords(unittest.TestCase):
         self.assertNotIn("units", records[0])
 
     def test_buffer_overflow_is_reported(self):
-        """Datensatz, der über das Ende hinausreicht -> BUFFER_OVERFLOW
-        (C++ Zeile 380-384: `if (index + len > size)`)."""
-        # DIF 0x07 = 64-Bit-Ganzzahl, aber nur 1 Byte Daten vorhanden
+        """Record reaching past the end -> BUFFER_OVERFLOW
+        (C++ line 380-384: `if (index + len > size)`)."""
+        # DIF 0x07 = 64-bit integer, but only 1 byte of data present
         decoder = MBusinoLib()
         records = decoder.decode_records(bytes([0x07, 0x00, 0x11]))
         self.assertEqual(decoder.get_error(), int(MBUS_ERROR.BUFFER_OVERFLOW))
         self.assertEqual(records, [])
 
     def test_buffer_overflow_keeps_already_decoded_records(self):
-        """Zwei Datensätze, der zweite läuft über den Puffer hinaus."""
-        # Datensatz 1 vollständig (DIF 01, VIF 00, 1 Byte), danach DIF 07 ohne Daten
+        """Two records, the second runs past the buffer."""
+        # record 1 complete (DIF 01, VIF 00, 1 byte), then DIF 07 without data
         decoder = MBusinoLib()
         records = decoder.decode_records(bytes([0x01, 0x00, 0x2A, 0x07, 0x00]))
         self.assertEqual(decoder.get_error(), int(MBUS_ERROR.BUFFER_OVERFLOW))

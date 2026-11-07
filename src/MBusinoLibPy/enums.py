@@ -1,31 +1,31 @@
 # -*- coding: utf-8 -*-
-"""Enumerations und Konstanten - 1:1-Port aus MBusinoLib.h.
+"""Enumerations and constants - 1:1 port from MBusinoLib.h.
 
-Die Reihenfolge der MBUS_CODE-Mitglieder ist identisch mit dem C++-Enum in
-MBusinoLib.h (Zeile 37-165): C++ vergibt die Werte 0,1,2,... in
-Deklarationsreihenfolge, Pythons IntEnum exakt dasselbe. Deshalb
-stimmen alle Zahlenwerte (und damit vif_defs + getCodeName & Co.) überein.
+The order of the MBUS_CODE members is identical to the C++ enum in
+MBusinoLib.h (line 37-165): C++ numbers them 0,1,2,... in declaration
+order and Python's IntEnum does exactly the same. Therefore all
+numeric values (and with them vif_defs + getCodeName & Co.) match.
 """
 
 from enum import IntEnum
 
-# Konstanten aus MBusinoLib.h Zeile 31-33
-MBUS_DEFAULT_BUFFER_SIZE = 254  # Größe des internen C++-Puffers (fällt in Python weg, s. Vorgabe 4)
-ARDUINO_FLOAT_MIN = 1e-6        # "Assume 0 if less than this" - im C++ nirgends benutzt, nur dokumentiert
+# Constants from MBusinoLib.h line 31-33
+MBUS_DEFAULT_BUFFER_SIZE = 254  # size of the internal C++ buffer (dropped in Python, see spec item 4)
+ARDUINO_FLOAT_MIN = 1e-6        # "Assume 0 if less than this" - never used in the C++ code, documentation only
 ARDUINO_FLOAT_DECIMALS = 6      # "6 decimals is just below the limit for Arduino float maths" -
-                                # entspricht der Toleranz der Golden-Tests für value_scaled
+                                # corresponds to the tolerance of the golden tests for value_scaled
 
 
 class MBUS_CODE(IntEnum):
-    """Unterstützte VIF-Codes - entspricht `enum MBUS_CODE` in MBusinoLib.h Zeile 37.
+    """Supported VIF codes - corresponds to `enum MBUS_CODE` in MBusinoLib.h line 37.
 
-    Der Wert ist die interne Datensatz-Kennung ("code"-Feld im JSON-Ausgabedatensatz),
-    NICHT der VIF-Byte-Wert. Letzterer steht in der vif_defs-Tabelle.
+    The value is the internal record identifier ("code" field of the JSON output),
+    NOT the VIF byte value. The latter lives in the vif_defs table.
     """
-    # unbekannter VIF - wird vom Original als Fehlerhinweis benutzt (VIF 0x7E ist im Richtung Slave -> Master nicht belegt)
+    # unknown VIF - the original uses it as a failure hint (VIF 0x7E is not used in the Slave -> Master direction)
     UNKNOWN_VIF = 0
 
-    # ohne VIFE: physikalische Größen direkt aus Tabelle 8.4.1 (EN 13757)
+    # without VIFE: physical quantities straight from table 8.4.1 (EN 13757)
     ENERGY_WH = 1
     ENERGY_J = 2
     VOLUME_M3 = 3
@@ -62,7 +62,7 @@ class MBUS_CODE(IntEnum):
     FABRICATION_NUMBER = 34
     BUS_ADDRESS = 35
 
-    # VIFE 0xFD: Betriebs- und Zählerdaten
+    # VIFE 0xFD: operating and counter data
     CREDIT = 36
     DEBIT = 37
     ACCESS_NUMBER = 38
@@ -90,7 +90,7 @@ class MBUS_CODE(IntEnum):
     CUMULATION_COUNTER = 60
     SPECIAL_SUPPLIER_INFO = 61
 
-    # VIFE 0xFDFD: zweifache Erweiterung (VIFE auf VIFE)
+    # VIFE 0xFDFD: double extension (VIFE on VIFE)
     CURRENT_SELECTED_APL = 62
     SUB_DEVICES = 63
     REMAIN_BAT_LIFE_MONTH = 64
@@ -156,12 +156,12 @@ class MBUS_CODE(IntEnum):
     # VIFE 0xFC: benutzerdefinierter VIF als ASCII-String
     CUSTOMIZED_VIF = 121
 
-    # VIFE 0xFF: herstellerspezifisch (wird nicht skaliert)
+    # VIFE 0xFF: manufacturer specific (never scaled)
     MANUFACTURER_SPECIFIC = 122
 
 
 class MBUS_ERROR(IntEnum):
-    """Fehlercodes - entspricht `enum MBUS_ERROR` in MBusinoLib.h Zeile 168-176."""
+    """Error codes - corresponds to `enum MBUS_ERROR` in MBusinoLib.h line 168-176."""
     NO_ERROR = 0
     BUFFER_OVERFLOW = 1
     UNSUPPORTED_CODING = 2

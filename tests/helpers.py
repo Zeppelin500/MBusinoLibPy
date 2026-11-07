@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Gemeinsame Helfer für die Golden-Tests.
+"""Shared helpers for the golden tests.
 
 Vergleichsregeln
 ----------------
 ``name``, ``units``, ``value_string``, ``vif``, ``code``, ``subUnit``,
-``storage``, ``tariff`` und ``telegramFollow`` müssen **exakt** stimmen -
-genau wie im C++-JSON. Gleiches gilt für die Menge der Keys (der ArduinoJson-
-Datensatz lässt nur vorhandene Keys drin).
+``storage``, ``tariff`` and ``telegramFollow`` must match **exactly** -
+just like in the C++ JSON. The same applies to the key set (the ArduinoJson
+record only keeps keys that are present).
 
-``value_scaled`` darf minimal abweichen, weil ArduinoJson die Zahl beim
-Serialisieren rundet (Beobachtung am Original-Harness: kleine Werte mit
-6 Nachkommastellen, grosse Werte mit 9 signifikanten Stellen, z.B.
+``value_scaled`` may deviate slightly, because ArduinoJson rounds the number
+while serialising (observed on the original harness: small values with
+6 decimals, large ones with 9 significant digits, e.g.
 202602132030 -> "2.02602132e11"). Deshalb:
 
     math.isclose(py_wert, cxx_wert, rel_tol=1e-6, abs_tol=1e-6)
 
-``1e-6`` entspricht ``ARDUINO_FLOAT_DECIMALS = 6`` aus MBusinoLib.h. In der
-Praxis liegt die tatsächliche Abweichung deutlich darunter (siehe README),
-weil die Rechenwege bit-identisch zum C++ sind.
+``1e-6`` corresponds to ``ARDUINO_FLOAT_DECIMALS = 6`` from MBusinoLib.h. In
+practice the real deviation is much smaller (see README),
+because the calculations are bit-identical to the C++.
 """
 
 import json
@@ -27,19 +27,19 @@ import re
 
 from . import GOLDEN_DIR
 
-#: Toleranz für value_scaled (ARDUINO_FLOAT_DECIMALS = 6)
+#: tolerance for value_scaled (ARDUINO_FLOAT_DECIMALS = 6)
 VALUE_REL_TOL = 1e-6
 VALUE_ABS_TOL = 1e-6
 
 
 def read_hex(path: str) -> bytes:
-    """Liest eine .hex-Datei (Leerzeichen-getrennt) wie der Harness aus argv."""
+    """Reads a .hex file (space separated) like the harness reads argv."""
     with open(path, encoding="ascii") as handle:
         return bytes(int(token, 16) for token in handle.read().split())
 
 
 def golden_telegrams():
-    """Alle Telegramm-Golden-Dateien als Liste von Dicts."""
+    """All telegram golden files as a list of dicts."""
     out = []
     for filename in sorted(os.listdir(GOLDEN_DIR)):
         if not filename.endswith(".expected.json"):
@@ -57,7 +57,7 @@ def golden_telegrams():
 
 
 def golden_records():
-    """Alle Datensatz-Golden-Dateien (tests/golden/records)."""
+    """All record golden files (tests/golden/records)."""
     out = []
     folder = os.path.join(GOLDEN_DIR, "records")
     for filename in sorted(os.listdir(folder)):
@@ -71,9 +71,9 @@ def golden_records():
 
 
 def compare_records(got, want, label="") -> list:
-    """Vergleicht zwei Datensatz-Listen, s. Modul-Docstring für die Regeln.
+    """Compares two record lists, see the module docstring for the rules.
 
-    :return: Liste der gefundenen Abweichungen (leer = alles identisch)
+    :return: list of found deviations (empty = everything identical)
     """
     problems = []
     if len(got) != len(want):
@@ -81,7 +81,7 @@ def compare_records(got, want, label="") -> list:
     for index, (g_item, w_item) in enumerate(zip(got, want)):
         where = "%s[%d]" % (label, index)
         if set(g_item) != set(w_item):
-            problems.append("%s: Keys weichen ab: nur hier %s / nur dort %s"
+            problems.append("%s: keys differ: only here %s / only there %s"
                             % (where, sorted(set(g_item) - set(w_item)),
                                sorted(set(w_item) - set(g_item))))
             continue
@@ -98,11 +98,11 @@ def compare_records(got, want, label="") -> list:
 
 
 def records_like_test_decode(hex_text: str):
-    """Führt exakt den Ablauf aus test_decode.cpp Zeile 51-66 aus.
+    """Runs exactly the flow of test_decode.cpp line 51-66.
 
-    ``packet_size = data[1] + 6``, Datensätze ab Offset ``0x13`` mit der
-    Länge ``packet_size - 0x13 - 2`` (also ohne Checksumme und Stopbyte,
-    obwohl der Puffer 2 Bytes länger ist - genau wie im C++).
+    ``packet_size = data[1] + 6``, records from offset ``0x13`` with the
+    length ``packet_size - 0x13 - 2`` (i.e. without checksum and stop byte,
+    even though the buffer is 2 bytes longer - exactly like in C++).
     """
     from MBusinoLibPy import MBusinoLib  # erst nach sys.path-Einhang
 
@@ -116,14 +116,14 @@ def records_like_test_decode(hex_text: str):
 
 
 def parse_harness_output(text: str) -> dict:
-    """Parst die Ausgabe von test_decode (für Reproduktions-Zwecke)."""
+    """Parses the output of test_decode (for reproduction purposes)."""
     match = re.search(
         r"Slave Address: (\d+)\nRecords decoded: (\d+)\nError code: (\d+)\n\n(\[.*?\n\])\n",
         text,
         re.S,
     )
     if not match:
-        raise ValueError("Ausgabe des Harness nicht parsebar")
+        raise ValueError("harness output not parseable")
     return {
         "slave_address": int(match.group(1)),
         "records_decoded": int(match.group(2)),

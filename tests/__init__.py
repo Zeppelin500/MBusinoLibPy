@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Test-Paket für MBusinoLibPy.
+"""Test package for MBusinoLibPy.
 
-Beim Import wird ``src/`` in ``sys.path`` eingehängt, damit die Tests ohne
-Installation laufen - also genauso mit ``python3 -m unittest`` als auch mit
-``python3 -m pytest`` aus dem Repo-Wurzelverzeichnis.
+On import ``src/`` is appended to ``sys.path`` so the tests run without
+an installation - i.e. with ``python3 -m unittest`` as well as with
+``python3 -m pytest`` from the repository root.
 """
 
 import os
@@ -14,5 +14,5 @@ _SRC = os.path.join(_REPO_ROOT, "src")
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
 
-#: Wurzelverzeichnis der Golden-Dateien (Erzeugnisse des C++-Harnesses)
+#: root directory of the golden files (productions of the C++ harness)
 GOLDEN_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "golden")

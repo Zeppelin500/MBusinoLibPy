@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""MBusinoLibPy - Python-Port der Arduino-Bibliothek **MBusinoLib**.
+"""MBusinoLibPy - Python port of the Arduino library **MBusinoLib**.
 
-Diese Bibliothek dekodiert M-Bus (Meterbus) RUP_UD-Telegramme - die Antwort
-eines Slave auf die Anfrage des Master - vollständig in reinem Python
-(Standardbibliothek, keine Laufzeit-Abhängigkeiten).
+This library decodes M-Bus (Meterbus) RSP_UD telegrams - the answer a
+slave sends to the master - entirely in pure Python
+(standard library only, no runtime dependencies).
 
-Der Port folgt dem C++-Original ``MBusinoLib`` (Version 0.10.0, GPL-3.0)
-Funktion für Funktion; jede Python-Funktion verweist in ihrem Kommentar auf
-die zugehörige C++-Funktion samt Zeilennummer.
+The port follows the C++ original ``MBusinoLib`` (version 0.10.0, GPL-3.0)
+function by function; every Python function refers in its comment to
+the corresponding C++ function including the line number.
 
 Schnellstart::
 
@@ -21,14 +21,14 @@ Schnellstart::
     result = decode.decode_telegram(telegram)
     print(result["header"]["manufacturer"], result["records"][0])
 
-Alle öffentlichen Namen:
+All public names:
 
-* ``MBusinoLib`` - die Dekodiererklasse
-* ``MBUS_CODE`` - Enum der unterstützten Datensatz-Codes (identisch zu C++)
-* ``MBUS_ERROR`` - Enum der Fehlercodes (identisch zu C++)
-* ``VIF_DEFS`` / ``MBUS_VIF_DEF_NUM`` - die VIF-Definitionstabelle
+* ``MBusinoLib`` - the decoder class
+* ``MBUS_CODE`` - enum of the supported record codes (identical to C++)
+* ``MBUS_ERROR`` - enum of the error codes (identical to C++)
+* ``VIF_DEFS`` / ``MBUS_VIF_DEF_NUM`` - the VIF definition table
 * ``CODE_NAME`` / ``CODE_UNITS`` / ``DEVICE_CLASS`` / ``STATE_CLASS`` /
-  ``MEDIUM_NAMES`` - die vier Nachschlagetabellen aus dem C++-Original
+  ``MEDIUM_NAMES`` - the four lookup tables from the C++ original
 """
 
 from .enums import (
@@ -48,7 +48,7 @@ from .lookup_tables import (
 from .mbusino_lib import MBusinoLib
 from .vif_defs import MBUS_VIF_DEF_NUM, VIF_DEFS
 
-__version__ = "0.10.0"  # entspricht der Version des C++-Originals (library.json)
+__version__ = "0.10.0"  # corresponds to the version of the C++ original (library.json)
 
 __all__ = [
     "MBusinoLib",
