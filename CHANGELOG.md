@@ -10,6 +10,8 @@ means "port of MBusinoLib 0.10.0".
 
 ### Changed
 
+- Documentation restructured: README now targets end users, development notes
+  and open points moved to `dev_issues/`.
 - All runtime error messages (`get_error_message()`, the `decode_telegram()`
   frame hints) are now English instead of German, and the last German
   identifiers/comments in tests and tools were translated — everything on
