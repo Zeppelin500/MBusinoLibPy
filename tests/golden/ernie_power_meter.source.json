@@ -1,0 +1,14 @@
+{
+  "name": "ernie_power_meter",
+  "bytes": 164,
+  "declared_length": 158,
+  "records": 16,
+  "error_code": 0,
+  "checksum": "0x8B (gültig)",
+  "manufacturer": "IME",
+  "id": "00067609",
+  "medium": "0x02 Electricity",
+  "address": 101,
+  "src": "MBusino/playground/MBusino_ernie/MBusino_ernie.ino:514 (auskommentiert); identische Bytes auch in playground/mqttTest/mqttTest.ino:517, playground/MBusino_64car/MBusino_64car.ino:514, src/MBusino/MBusino.ino:690, src/MBusino5S/MBusino5S.ino:871, src/MBusinoNano/MBusinoNano.ino:749, archive/eth/MBusinoNano_MBusCom/MBusinoNano_MBusCom.ino:353",
+  "note": "Dreh- und Wechselzehler (Electricity) mit Leistungs-/Spannungs-/Stromdatensätzen inkl. Phasen-VIFE (0xFC/0xFF + L1/L2/L3/N) und SubUnit/Tarif-DIFE. Endet mit der Marke 0x0F -> deckt den Abbruch \"manufacturer specific\" in decodeRecords() ab (Zeile 648)."
+}

@@ -1,0 +1,14 @@
+{
+  "name": "hw_thermostat",
+  "bytes": 89,
+  "declared_length": 83,
+  "records": 12,
+  "error_code": 0,
+  "checksum": "0x9F (gültig)",
+  "manufacturer": "ELV",
+  "id": "24008211",
+  "medium": "0x00 Unknown",
+  "address": 2,
+  "src": "MBusino/archive/telegram_test/telegram_test.ino:92 (auskommentiert, Zeilenkommentar \"HW Termostat\")",
+  "note": "Endet mit der Marke 0x1F -> deckt den Pfad \"telegramFollow\" in decodeRecords() ab (MBusinoLib.cpp Zeile 652). Enthält außerdem ASCII-VIF-Datensätze (VIF 0xFC mit eigenem Text)."
+}

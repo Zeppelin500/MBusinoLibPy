@@ -1,0 +1,14 @@
+{
+  "name": "mbusino_example",
+  "bytes": 202,
+  "declared_length": 196,
+  "records": 30,
+  "error_code": 0,
+  "checksum": "0xFB (gültig)",
+  "manufacturer": "WZG",
+  "id": "29079172",
+  "medium": "0x16 Cold water",
+  "address": 20,
+  "src": "MBusinoLib/examples/MbusinoLibExample/MbusinoLibExample.ino:15 (die auskommentierte Alternative zum aktiven Engelmann-Telegramm)",
+  "note": "Längstes Telegramm mit 30 Datensätzen (Speicher 1..6, Status- und Fehlerdatensätze, Datum Typ G). Der originale test_decode-Harness hält sein JSON-Puffer nur für 4096 Byte aus und schneidet hier ab; die Golden-Datei wurde deshalb mit einem Wrapper erzeugt, der identischen Code, aber einen 262144-Byte-Puffer benutzt (für die vier kürzeren Telegramme ist das Ergebnis byte-identisch, s. tools/README.md)."
+}

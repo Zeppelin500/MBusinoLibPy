@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MBusinoLibPy"
+version = "0.10.0"
+description = "Python port of MBusinoLib, the Arduino M-Bus (Meterbus) RSP_UD decoder library"
+readme = "README.md"
+requires-python = ">=3.9"
+# GPL-3.0-or-later - identisch zur C++-Originalbibliothek (siehe LICENSE,
+# Abschnitt 1-3 der Quelltexte: "either version 3 ... or (at your option)
+# any later version").
+license = { text = "GPL-3.0-or-later" }
+authors = [
+    { name = "Zeppelin500", email = "mbusinolib@gmail.com" },
+]
+keywords = [
+    "m-bus", "mbus", "meterbus", "mbusino", "decoder", "dif", "vif",
+    "en13757", "smart-meter", "heat-meter",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Home Automation",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Scientific/Engineering",
+]
+# KEINE Laufzeit-Abhaengigkeiten: nur die Python-Standardbibliothek
+# (enum, struct, json/test) - entspricht dem Ziel "NULL runtime dependencies".
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/ZeppelinsBot/MBusinoLibPy"
+Source = "https://github.com/ZeppelinsBot/MBusinoLibPy"
+Original = "https://github.com/Zeppelin500/MBusinoLib"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["MBusinoLibPy*"]
+
+[tool.setuptools.package-data]
+MBusinoLibPy = ["py.typed"]
+
+# --------------------------------------------------------------------------
+# Tests: ausschliesslich stdlib-unittest (pytest ist in der Zielumgebung nicht
+# installiert). `python3 -m unittest` und `python3 -m pytest` laufen beide.
+# --------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
