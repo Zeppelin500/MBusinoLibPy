@@ -3,7 +3,7 @@
 Unclean and unresolved things noticed while porting **MBusinoLib 0.10.0** to
 Python. **Every item here is `Status: open`** - nothing has been fixed yet.
 Fundstellen refer to the C++ original (local checkout `~/…/MBusinoLib`,
-upstream <https://github.com/ZeppelinsBot/MBusinoLib>) unless stated
+upstream <https://github.com/Zeppelin500/MBusinoLib>) unless stated
 otherwise. Line numbers were re-checked against the current checkout on
 2026-11-07.
 
