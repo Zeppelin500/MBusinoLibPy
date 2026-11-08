@@ -11,7 +11,8 @@ means "port of MBusinoLib 0.10.0".
 ### Added
 
 - Runnable examples in `examples/` and doctest examples in the main docstrings
-  (covered by the test suite).
+  (covered by the test suite). Added `examples/minimal_hex_to_json.py`, the
+  shortest end-to-end example: a telegram hex string in, JSON out.
 
 ### Changed
 
