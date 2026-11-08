@@ -79,7 +79,9 @@ A hex string works too (spaces, commas and `0x` prefixes are accepted):
 result = MBusinoLib().decode_telegram("68 1F 1F 68 08 00 72 78 56 34 ... CC 16")
 ```
 
-More runnable examples: [examples/](examples/).
+More runnable examples: [examples/](examples/) - start with
+[`examples/minimal_hex_to_json.py`](examples/minimal_hex_to_json.py)
+(hex spaghetti in, JSON out).
 
 ## API reference
 
