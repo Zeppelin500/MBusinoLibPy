@@ -78,7 +78,8 @@ jobs:
       name: pypi
       url: https://pypi.org/project/MBusinoLibPy/
     permissions:
-      id-token: "***"
+      id-token: write
+      contents: read
     steps:
       - uses: actions/download-artifact@v4
         with:
