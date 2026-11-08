@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MBusinoLibPy - Web Decoder</title>
+  <meta name="description" content="Browser-based test page for the MBusinoLib Python port.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>MBusinoLibPy &middot; Web Decoder</h1>
+      <p class="tagline">
+        Browser-based test page for the MBusinoLib Python port.
+        <a href="https://github.com/Zeppelin500/MBusinoLibPy">GitHub repository</a>
+      </p>
+      <p id="runtime-status" class="runtime-status" role="status" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="runtime-status-text">Loading Python runtime&hellip; (about 10 MB on first visit)</span>
+      </p>
+      <div id="error-banner" class="banner banner-error" hidden>
+        <strong>Could not start the decoder.</strong>
+        <span id="error-banner-text"></span>
+        <button type="button" id="retry-btn" class="btn btn-small">Retry</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" aria-labelledby="input-heading">
+      <h2 id="input-heading">Telegram input</h2>
+      <p class="hint">
+        Paste an M-Bus telegram as hex. Spaces, commas, <code>0x</code> prefixes and
+        newlines are all accepted.
+      </p>
+      <label class="visually-hidden" for="hex-input">Telegram hex</label>
+      <textarea id="hex-input" rows="7" spellcheck="false" autocapitalize="off"
+        autocomplete="off" placeholder="68 C1 C1 68 08 00 72 ... 75 16"></textarea>
+      <div class="controls">
+        <button type="button" id="decode-btn" class="btn btn-primary" disabled>Decode</button>
+        <button type="button" id="clear-btn" class="btn">Clear</button>
+        <span class="hint shortcut-hint">Ctrl/Cmd + Enter decodes</span>
+      </div>
+      <div class="examples">
+        <span class="examples-label">Examples:</span>
+        <button type="button" class="btn btn-example" data-example="efe_heat_meter">EFE heat meter (29 records)</button>
+        <button type="button" class="btn btn-example" data-example="hw_thermostat">HW thermostat</button>
+        <button type="button" class="btn btn-example" data-example="mbusino_example">MBusino example</button>
+      </div>
+    </section>
+
+    <section id="output" aria-labelledby="output-heading" hidden>
+      <h2 id="output-heading" class="visually-hidden">Decoding result</h2>
+
+      <div id="result-banner" class="banner" role="status" aria-live="polite"></div>
+
+      <section id="header-card" class="card" hidden>
+        <h3>Fixed data header</h3>
+        <dl id="header-grid" class="kv-grid"></dl>
+      </section>
+
+      <section id="records-card" class="card" hidden>
+        <h3 id="records-heading">Records</h3>
+        <div class="table-scroll">
+          <table id="records-table">
+            <thead>
+              <tr><th scope="col">#</th><th scope="col">Property</th><th scope="col">Value</th><th scope="col">Unit</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="records-empty" class="muted" hidden>No records decoded.</p>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>
+        Decoding runs entirely in your browser via
+        <a href="https://pyodide.org/">Pyodide</a> - no telegram data leaves this device.
+      </p>
+      <p>
+        <a href="https://github.com/Zeppelin500/MBusinoLibPy">MBusinoLibPy</a>
+        is licensed under GPL-3.0.
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
