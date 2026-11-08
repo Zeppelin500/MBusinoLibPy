@@ -1,6 +1,7 @@
 # MBusinoLibPy - a Python M-Bus Decoder
 
 [![version](https://img.shields.io/badge/version-0.10.0-brightgreen.svg)](CHANGELOG.md)
+[![PyPI](https://img.shields.io/badge/PyPI-MBusinoLibPy-blue.svg)](https://pypi.org/project/MBusinoLibPy/)
 [![license](https://img.shields.io/badge/license-GPL--3.0-orange.svg)](LICENSE)
 [![python](https://img.shields.io/badge/python-%E2%89%A53.9-blue.svg)](https://www.python.org/)
 [![dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg)](pyproject.toml)
@@ -19,7 +20,16 @@ GPL-3.0).
 
 ## Installation
 
-There is no PyPI package - install straight from GitHub:
+Install the published package from PyPI:
+
+```bash
+pip install MBusinoLibPy
+```
+
+Distribution names are case-insensitive, so `pip install mbusinolibpy` works
+just as well.
+
+Want the latest state straight from GitHub instead? Install from the repository:
 
 ```bash
 pip install git+https://github.com/Zeppelin500/MBusinoLibPy.git
