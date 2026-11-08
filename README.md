@@ -14,9 +14,7 @@ GPL-3.0).
 
 * **No runtime dependencies** - Python ≥ 3.9, standard library only.
 * **Supports any M-Bus slave** - there is no fixed device list: any slave that
-  answers with a standard RSP_UD telegram is supported. Record types that are
-  not in the lookup tables still decode to plain values (`unknown_vif` is the
-  documented fallback, not a limitation of the decoder).
+  answers with a standard RSP_UD telegram is supported.
 * **Try it live in the browser** - a Pyodide-based web decoder is online at
   <https://zeppelin500.github.io/MBusinoLibPy/> (source: [docs/](docs/)).
 * Validates a *complete* frame (start/stop byte, declared length, checksum)
@@ -136,7 +134,7 @@ carries it):
 | key | content |
 |-----|---------|
 | `vif` | VIF/VIFE as lower-case hex string, e.g. `"0xfd1b"` |
-| `code` | `MBUS_CODE` value (the record type, *not* the VIF byte) |
+| `code` | `MBUS_CODE` value (the internal record type, *not* the VIF byte) |
 | `value_scaled` | numeric value, already scaled - absent for pure ASCII records |
 | `value_string` | formatted value (dates, ASCII) |
 | `units` | unit such as `"Wh"`, `"m³"`, `"°C"` - absent when none applies |
