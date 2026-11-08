@@ -2,15 +2,30 @@ name: Publish
 
 # Two triggers, two targets:
 #  * manual run  -> dry run: tests + build + twine check, no upload
+#                   (first release: run with input publish=true, see note below)
 #  * release     -> build and publish to PyPI
 #
-# PyPI auth: API token stored as repo secret PYPI_API_TOKEN (owner-provided,
-# entered via masked input). TestPyPI is deliberately not used: a pypi.org
-# token cannot be rehearsed there and it would need a second trusted-
-# publisher setup.
+# Authentication: PyPI Trusted Publishing (OIDC) - no API tokens, no secrets.
+# One-time owner setup on pypi.org (Account -> Publishing -> Add a new pending
+# publisher) with these exact values:
+#   project name:  MBusinoLibPy
+#   owner:         Zeppelin500
+#   repository:    MBusinoLibPy
+#   workflow name: publish.yml
+#   environment:   pypi
+#
+# Note: a release run is pinned to the commit it was created from, so the
+# existing release v0.10.0 still contains the old token-based workflow. That
+# FIRST release is published via workflow_dispatch with input publish=true;
+# all later releases publish automatically through the release trigger.
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the built distributions to PyPI (Trusted Publishing)"
+        type: boolean
+        default: false
   release:
     types: [ published ]
 
@@ -57,18 +72,20 @@ jobs:
 
   publish-pypi:
     needs: build
-    if: github.event_name == 'release' && github.repository == 'Zeppelin500/MBusinoLibPy'
+    if: github.repository == 'Zeppelin500/MBusinoLibPy' && (github.event_name == 'release' || inputs.publish == true)
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/project/MBusinoLibPy/
+    permissions:
+      id-token: "***"
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
 
+      # Trusted Publishing: no password/token input - the action authenticates
+      # via OIDC against the pending publisher registered on pypi.org.
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: "*** PYPI_API_TOKEN }}"
