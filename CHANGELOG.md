@@ -18,6 +18,9 @@ means "port of MBusinoLib 0.10.0".
 - README documents the PyPI release: `pip install MBusinoLibPy` is now the
   primary installation path, with the GitHub checkout as the alternative for
   the latest development state.
+- README states that the decoder supports any M-Bus slave (no fixed device
+  list) and links the live browser decoder on GitHub Pages
+  (https://zeppelin500.github.io/MBusinoLibPy/).
 - Documentation restructured: README now targets end users, development notes
   and open points moved to `dev_issues/`.
 - All runtime error messages (`get_error_message()`, the `decode_telegram()`
