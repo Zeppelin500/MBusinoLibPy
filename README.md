@@ -13,6 +13,12 @@ Python standard library and is the Python port of the Arduino library
 GPL-3.0).
 
 * **No runtime dependencies** - Python ≥ 3.9, standard library only.
+* **Supports any M-Bus slave** - there is no fixed device list: any slave that
+  answers with a standard RSP_UD telegram is supported. Record types that are
+  not in the lookup tables still decode to plain values (`unknown_vif` is the
+  documented fallback, not a limitation of the decoder).
+* **Try it live in the browser** - a Pyodide-based web decoder is online at
+  <https://zeppelin500.github.io/MBusinoLibPy/> (source: [docs/](docs/)).
 * Validates a *complete* frame (start/stop byte, declared length, checksum)
   before decoding header and records.
 * Known record types come with readable names, units and Home Assistant
