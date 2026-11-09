@@ -17,7 +17,7 @@ OUT="$ROOT/docs/cpp"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-MBUSINO_REF="${MBUSINO_REF:-d9acd52}"          # C++ MBusinoLib v0.10.0
+MBUSINO_REF="${MBUSINO_REF:-142bd98}"          # C++ MBusinoLib v0.11.0
 ARDUINOJSON_REF="${ARDUINOJSON_REF:-v7.4.3}"   # header-only, MIT
 
 if ! command -v em++ >/dev/null 2>&1; then

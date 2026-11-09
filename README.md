@@ -1,6 +1,6 @@
 # MBusinoLibPy - a Python M-Bus Decoder
 
-[![version](https://img.shields.io/badge/version-0.10.0-brightgreen.svg)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.11.0-brightgreen.svg)](CHANGELOG.md)
 [![PyPI](https://img.shields.io/badge/PyPI-MBusinoLibPy-blue.svg)](https://pypi.org/project/MBusinoLibPy/)
 [![license](https://img.shields.io/badge/license-GPL--3.0-orange.svg)](LICENSE)
 [![python](https://img.shields.io/badge/python-%E2%89%A53.9-blue.svg)](https://www.python.org/)

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "MBusinoLibPy"
-version = "0.10.0"
+version = "0.11.0"
 description = "Python port of MBusinoLib, the Arduino M-Bus (Meterbus) RSP_UD decoder library"
 readme = "README.md"
 requires-python = ">=3.9"
