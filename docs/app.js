@@ -1,9 +1,10 @@
 /* MBusinoLibPy Web Decoder - plain JavaScript, no framework, no build step.
  *
- * The library source is fetched at runtime from jsDelivr's GitHub CDN with
- * the @main pin so this page always tests the current upstream main branch:
- * no library copy lives in this repository, and the served code can never
- * silently drift from the repo it demonstrates.
+ * Two decoders run on the same input, side by side:
+ *   - Python port via Pyodide (sources fetched from jsDelivr @main, so the
+ *     page always tests the current upstream source),
+ *   - the original C++ MBusinoLib compiled to WebAssembly (docs/cpp/, built
+ *     by tools/wasm/build.sh).
  */
 var LIB_BASE_URL = "https://cdn.jsdelivr.net/gh/Zeppelin500/MBusinoLibPy@main/src/MBusinoLibPy/";
 
@@ -55,14 +56,18 @@ var BOOTSTRAP_PY = [
   "    return json.dumps(MBusinoLib().decode_telegram(hex_str))"
 ].join("\n");
 
+/* Engine state. Each engine exposes decode(hex) -> JSON string once ready. */
+var engines = {
+  python: { ready: false, failed: false, decode: null },
+  cpp: { ready: false, failed: false, decode: null }
+};
+
 var pyodide = null;
-var decodeJson = null;
-var ready = false;
 var initRunning = false;
 
 var statusEl, statusTextEl, errorBanner, errorTextEl, retryBtn;
-var inputEl, decodeBtn, clearBtn, outputEl, resultBanner;
-var headerCard, headerGrid, recordsCard, recordsBody, recordsEmpty, recordsHeading, recordsNote;
+var inputEl, decodeBtn, clearBtn, outputEl;
+var panelPython, panelCpp;
 
 /* ------------------------------------------------------------------ */
 /* Runtime status                                                      */
@@ -72,6 +77,24 @@ function setStatus(state, text) {
   statusEl.classList.remove("is-loading", "is-ready", "is-error");
   statusEl.classList.add("is-" + state);
   statusTextEl.textContent = text;
+}
+
+function updateStatus() {
+  var py = engines.python;
+  var cc = engines.cpp;
+  if (py.ready && cc.ready) {
+    setStatus("ready", "Ready");
+  } else if (py.failed && cc.failed) {
+    setStatus("error", "Both runtimes failed to load");
+  } else if (py.ready || cc.ready || py.failed || cc.failed) {
+    setStatus("loading", "One runtime still loading…");
+  } else {
+    setStatus("loading", "Loading runtimes… (Python ~10 MB, C++ ~70 KB)");
+  }
+  // Decode needs at least one working engine, and both to be settled
+  // (ready or failed) so "both decode at once" is meaningful.
+  var settled = (py.ready || py.failed) && (cc.ready || cc.failed);
+  decodeBtn.disabled = !settled || !(py.ready || cc.ready);
 }
 
 function showError(message) {
@@ -84,18 +107,11 @@ function hideError() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Pyodide startup                                                     */
+/* Python (Pyodide) startup                                            */
 /* ------------------------------------------------------------------ */
 
-async function init() {
-  if (initRunning || ready) {
-    return;
-  }
-  initRunning = true;
-  hideError();
-  setStatus("loading", "Loading Python runtime... (about 10 MB on first visit)");
-  decodeBtn.disabled = true;
-
+async function initPython() {
+  engines.python.failed = false;
   try {
     if (typeof loadPyodide !== "function") {
       throw new Error("The Pyodide loader script could not be loaded from the CDN.");
@@ -117,17 +133,38 @@ async function init() {
 
     pyodide.globals.set("_files_json", JSON.stringify(files));
     pyodide.runPython(BOOTSTRAP_PY);
-    decodeJson = pyodide.globals.get("decode_json");
-
-    ready = true;
-    setStatus("ready", "Ready");
-    decodeBtn.disabled = false;
+    engines.python.decode = pyodide.globals.get("decode_json");
+    engines.python.ready = true;
   } catch (err) {
-    setStatus("error", "Failed to load the Python runtime");
+    engines.python.failed = true;
     showError(String((err && err.message) || err));
   } finally {
-    initRunning = false;
+    updateStatus();
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* C++ (WASM) startup                                                  */
+/* ------------------------------------------------------------------ */
+
+function initCpp() {
+  engines.cpp.failed = false;
+  if (typeof createMBusinoCpp !== "function") {
+    engines.cpp.failed = true;
+    showError("The C++ WebAssembly module could not be loaded.");
+    updateStatus();
+    return;
+  }
+  createMBusinoCpp({ locateFile: function (path) { return "cpp/" + path; } })
+    .then(function (module) {
+      engines.cpp.decode = module.cwrap("decode_hex", "string", ["string"]);
+      engines.cpp.ready = true;
+    })
+    .catch(function (err) {
+      engines.cpp.failed = true;
+      showError(String((err && err.message) || err));
+    })
+    .then(updateStatus);
 }
 
 /* ------------------------------------------------------------------ */
@@ -140,77 +177,205 @@ function decode() {
     outputEl.hidden = true;
     return;
   }
+  outputEl.hidden = false;
+  runEngine(panelPython, "python", hex);
+  runEngine(panelCpp, "cpp", hex);
+}
 
+function runEngine(panel, name, hex) {
+  var engine = engines[name];
+  if (!engine.ready || typeof engine.decode !== "function") {
+    renderPanelError(panel, name, "Runtime not available.");
+    return;
+  }
+  var raw;
+  try {
+    raw = engine.decode(hex);
+  } catch (err) {
+    renderPanelError(panel, name, lastLine(err));
+    return;
+  }
   var result;
   try {
-    result = JSON.parse(decodeJson(hex));
+    result = JSON.parse(raw);
   } catch (err) {
-    renderPythonError(err);
+    renderPanelError(panel, name, lastLine(err));
     return;
   }
-  renderResult(result);
+  if (name === "python") {
+    renderPythonResult(panel, result);
+  } else {
+    renderCppResult(panel, result);
+  }
 }
 
-function renderPythonError(err) {
-  outputEl.hidden = false;
-  headerCard.hidden = true;
-  recordsCard.hidden = true;
-  resultBanner.className = "banner banner-fail";
-  resultBanner.innerHTML = "";
-  var title = document.createElement("span");
-  title.className = "banner-title";
-  title.textContent = "Decoding failed:";
-  var detail = document.createElement("span");
-  // PythonError messages carry the whole traceback; the last line is the
-  // actual exception and reads much better in a small banner.
+function lastLine(err) {
+  // PythonError messages carry the whole traceback; the last line reads best.
   var message = String((err && err.message) || err);
   var lines = message.split("\n").map(function (line) { return line.trim(); }).filter(Boolean);
-  detail.textContent = lines.length ? lines[lines.length - 1] : message;
-  resultBanner.appendChild(title);
-  resultBanner.appendChild(detail);
+  return lines.length ? lines[lines.length - 1] : message;
 }
 
-function renderResult(result) {
-  outputEl.hidden = false;
-
+function renderPythonResult(panel, result) {
   var frame = result.frame || {};
   var success = frame.ok === true && result.error === 0;
-  resultBanner.className = "banner " + (success ? "banner-ok" : "banner-fail");
-  resultBanner.innerHTML = "";
-  var title = document.createElement("span");
-  title.className = "banner-title";
-  title.textContent = success ? "Frame OK" : "Frame error";
-  var detail = document.createElement("span");
-  detail.textContent = success
-    ? "Start/stop byte, length, checksum and records all verified."
-    : (result.error_message || frame.error_message || "Unknown problem.");
-  resultBanner.appendChild(title);
-  resultBanner.appendChild(detail);
-
-  renderHeader(result.header || {});
-  renderRecords(result.records || []);
+  renderPanel(panel, {
+    bannerClass: success ? "banner-ok" : "banner-fail",
+    bannerTitle: success ? "Frame OK" : "Frame error",
+    bannerDetail: success
+      ? "Start/stop byte, length, checksum and records all verified."
+      : (result.error_message || frame.error_message || "Unknown problem."),
+    header: result.header || {},
+    records: result.records || []
+  });
 }
 
-function renderHeader(header) {
-  var entries = flatten(header);
-  headerGrid.innerHTML = "";
-  if (entries.length === 0) {
-    headerCard.hidden = false;
-    var note = document.createElement("p");
-    note.className = "muted";
-    note.textContent = "No fixed data header decoded for this frame.";
-    headerGrid.appendChild(note);
+function renderCppResult(panel, result) {
+  var success = result.header_ok === true && result.error_code === 0;
+  var count = result.records ? result.records.length : 0;
+  renderPanel(panel, {
+    bannerClass: success ? "banner-ok" : "banner-fail",
+    bannerTitle: success ? "Decoded" : "Decode error",
+    bannerDetail: success
+      ? "Original C++ library: header + " + count + " records decoded."
+      : "The original library reported error code " + result.error_code + ".",
+    header: result.header || {},
+    records: result.records || []
+  });
+}
+
+function renderPanelError(panel, name, message) {
+  renderPanel(panel, {
+    bannerClass: "banner-fail",
+    bannerTitle: "Decoding failed",
+    bannerDetail: message,
+    header: null,
+    records: null
+  });
+}
+
+/* Renders one engine's whole panel body: banner, fixed-data-header card and
+ * records card. `model` is {bannerClass, bannerTitle, bannerDetail, header,
+ * records}; header/records null means "not decoded". */
+function renderPanel(panel, model) {
+  panel.innerHTML = "";
+
+  var banner = document.createElement("div");
+  banner.className = "banner " + model.bannerClass;
+  var title = document.createElement("span");
+  title.className = "banner-title";
+  title.textContent = model.bannerTitle;
+  var detail = document.createElement("span");
+  detail.textContent = model.bannerDetail;
+  banner.appendChild(title);
+  banner.appendChild(detail);
+  panel.appendChild(banner);
+
+  if (model.header === null) {
     return;
   }
-  entries.forEach(function (entry) {
-    var dt = document.createElement("dt");
-    dt.textContent = entry[0];
-    var dd = document.createElement("dd");
-    dd.textContent = entry[1];
-    headerGrid.appendChild(dt);
-    headerGrid.appendChild(dd);
+
+  panel.appendChild(buildHeaderCard(model.header));
+  panel.appendChild(buildRecordsCard(model.records || []));
+}
+
+function buildHeaderCard(header) {
+  var card = document.createElement("section");
+  card.className = "card";
+  var h = document.createElement("h4");
+  h.textContent = "Fixed data header";
+  card.appendChild(h);
+
+  var grid = document.createElement("dl");
+  grid.className = "kv-grid";
+  var entries = flatten(header);
+  if (entries.length === 0) {
+    var none = document.createElement("p");
+    none.className = "muted";
+    none.textContent = "No fixed data header decoded for this frame.";
+    grid.appendChild(none);
+  } else {
+    entries.forEach(function (entry) {
+      var dt = document.createElement("dt");
+      dt.textContent = formatKey(entry[0]);
+      var dd = document.createElement("dd");
+      dd.textContent = entry[1];
+      grid.appendChild(dt);
+      grid.appendChild(dd);
+    });
+  }
+  card.appendChild(grid);
+  return card;
+}
+
+function buildRecordsCard(records) {
+  var card = document.createElement("section");
+  card.className = "card";
+  var h = document.createElement("h4");
+  h.textContent = "Records (" + records.length + ")";
+  card.appendChild(h);
+
+  if (records.length === 0) {
+    var empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No records decoded.";
+    card.appendChild(empty);
+    return card;
+  }
+
+  var scroll = document.createElement("div");
+  scroll.className = "table-scroll";
+  var table = document.createElement("table");
+  table.className = "records-table";
+  var thead = document.createElement("thead");
+  var headRow = document.createElement("tr");
+  ["#", "Property", "Value", "Unit", "VIF", "SubUnit", "Storage", "Tariff"].forEach(function (label) {
+    var th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = label;
+    headRow.appendChild(th);
   });
-  headerCard.hidden = false;
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  var tbody = document.createElement("tbody");
+  var follows = false;
+  records.forEach(function (record, index) {
+    var row = document.createElement("tr");
+    addCell(row, String(index + 1));
+    addCell(row, record.name || "-");
+
+    // value_scaled for numeric records, value_string for dates/ASCII.
+    var raw = record.value_scaled;
+    if (raw === null || raw === undefined) {
+      raw = record.value_string;
+    }
+    addCell(row, raw === null || raw === undefined || raw === "" ? "-" : String(raw));
+
+    addCell(row, record.units || "");
+    addCell(row, record.vif || "");
+    addCell(row, record.subUnit ? String(record.subUnit) : "");
+    addCell(row, record.storage ? String(record.storage) : "");
+    addCell(row, record.tariff ? String(record.tariff) : "");
+
+    if (record.telegramFollow) {
+      follows = true;
+    }
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);
+  scroll.appendChild(table);
+  card.appendChild(scroll);
+
+  if (follows) {
+    var note = document.createElement("p");
+    note.className = "note-follow";
+    note.textContent =
+      "This telegram is marked: another telegram is ready for retrieval " +
+      "(0x1F end marker).";
+    card.appendChild(note);
+  }
+  return card;
 }
 
 /* One level of nesting (status_details.*) -> flat key/value pairs. */
@@ -236,56 +401,10 @@ function flatten(obj) {
   return out;
 }
 
-/* One record -> one table row. The user-facing fields get a column: name,
-   value, unit, vif, subUnit, storage and tariff. Missing fields render as an
-   empty cell. telegramFollow is not a column - it is reported as a note under
-   the table (it describes the telegram, not the record). */
-function renderRecords(records) {
-  recordsBody.innerHTML = "";
-  recordsCard.hidden = false;
-  recordsHeading.textContent = "Records (" + records.length + ")";
-  recordsNote.hidden = true;
-  recordsNote.textContent = "";
-  if (records.length === 0) {
-    recordsEmpty.hidden = false;
-    return;
-  }
-  recordsEmpty.hidden = true;
-
-  var follows = false;
-
-  records.forEach(function (record, index) {
-    var row = document.createElement("tr");
-
-    addCell(row, String(index + 1));
-    addCell(row, record.name || "-");
-
-    // value_scaled for numeric records, value_string for dates/ASCII.
-    var raw = record.value_scaled;
-    if (raw === null || raw === undefined) {
-      raw = record.value_string;
-    }
-    addCell(row, raw === null || raw === undefined || raw === "" ? "-" : String(raw));
-
-    addCell(row, record.units || "");
-    addCell(row, record.vif || "");
-    addCell(row, record.subUnit ? String(record.subUnit) : "");
-    addCell(row, record.storage ? String(record.storage) : "");
-    addCell(row, record.tariff ? String(record.tariff) : "");
-
-    if (record.telegramFollow) {
-      follows = true;
-    }
-
-    recordsBody.appendChild(row);
-  });
-
-  if (follows) {
-    recordsNote.textContent =
-      "This telegram is marked: another telegram is ready for retrieval " +
-      "(0x1F end marker).";
-    recordsNote.hidden = false;
-  }
+/* "status_details.battery_low" -> "status details · battery low": readable,
+   and it wraps at spaces instead of mid-word inside the label column. */
+function formatKey(key) {
+  return String(key).replace(/_/g, " ").replace(/\./g, " \u00b7 ");
 }
 
 function addCell(row, text) {
@@ -314,23 +433,21 @@ document.addEventListener("DOMContentLoaded", function () {
   decodeBtn = document.getElementById("decode-btn");
   clearBtn = document.getElementById("clear-btn");
   outputEl = document.getElementById("output");
-  resultBanner = document.getElementById("result-banner");
-  headerCard = document.getElementById("header-card");
-  headerGrid = document.getElementById("header-grid");
-  recordsCard = document.getElementById("records-card");
-  recordsBody = document.querySelector("#records-table tbody");
-  recordsEmpty = document.getElementById("records-empty");
-  recordsHeading = document.getElementById("records-heading");
-  recordsNote = document.getElementById("records-note");
+  panelPython = document.querySelector("#panel-python .panel-body");
+  panelCpp = document.querySelector("#panel-cpp .panel-body");
 
   decodeBtn.addEventListener("click", decode);
   clearBtn.addEventListener("click", clearAll);
-  retryBtn.addEventListener("click", init);
+  retryBtn.addEventListener("click", function () {
+    hideError();
+    if (!engines.python.ready) { initPython(); }
+    if (!engines.cpp.ready) { initCpp(); }
+  });
 
   inputEl.addEventListener("keydown", function (event) {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
-      if (ready) {
+      if (!decodeBtn.disabled) {
         decode();
       }
     }
@@ -339,11 +456,13 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".btn-example").forEach(function (button) {
     button.addEventListener("click", function () {
       inputEl.value = EXAMPLES[button.dataset.example] || "";
-      if (ready) {
+      if (!decodeBtn.disabled) {
         decode();
       }
     });
   });
 
-  init();
+  updateStatus();
+  initPython();
+  initCpp();
 });
