@@ -227,22 +227,24 @@ Exactly like `MBusinoLib::getError()` (`MBusinoLib.cpp` line 54): the value is
 returned *and* cleared. `get_error_message()` only reads, so call it before
 `get_error()` if you need both.
 
-Possible error values (`MBUS_ERROR`, identical numbering to the C++):
+Possible error values (`MBUS_ERROR` - only the codes the decoder can set;
+the C++ encoder leftovers `UNSUPPORTED_CODING` (2), `UNSUPPORTED_RANGE` (3)
+and `NEGATIVE_VALUE` (5) were removed from the Python enum, OP-1, so the
+gaps in the numbering are deliberate):
 
 | value | name | meaning while decoding |
 |-------|------|------------------------|
 | 0 | `NO_ERROR` | no error |
 | 1 | `BUFFER_OVERFLOW` | declared length does not fit, or a record reaches past the buffer |
-| 2 | `UNSUPPORTED_CODING` | (encoder legacy, never set while decoding) |
-| 3 | `UNSUPPORTED_RANGE` | (encoder legacy, never set while decoding) |
 | 4 | `UNSUPPORTED_VIF` | VIF is not in `vif_defs`; the record falls back to `unknown_vif` |
-| 5 | `NEGATIVE_VALUE` | (encoder legacy, never set while decoding) |
 
 ### Enums
 
-`MBUS_CODE` (123 members) and `MBUS_ERROR` (6 members) are `IntEnum`s with the
-same member order - and therefore the same integer values - as the C++
-enums in `MBusinoLib.h`. `VIF_DEFS` is the 1:1 copy of the `vif_defs` table
+`MBUS_CODE` (123 members) and `MBUS_ERROR` (3 members) are `IntEnum`s whose
+members keep the same order and the same integer values as the C++ enums in
+`MBusinoLib.h` (`MBUS_ERROR` only where the decoder can set a code - the
+removed encoder leftovers 2, 3 and 5 leave deliberate gaps). `VIF_DEFS` is
+the 1:1 copy of the `vif_defs` table
 (132 entries: `(code, base, size, scalar)`).
 
 ## Differences from the C++ library

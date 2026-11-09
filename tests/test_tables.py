@@ -53,18 +53,17 @@ class TestEnums(unittest.TestCase):
         self.assertEqual(len(MBUS_CODE), 123)
 
     def test_mbus_error_values(self):
-        """C++ (MBusinoLib.h line 185-192): NO_ERROR=0 ... NEGATIVE_VALUE=5."""
+        """Only the three codes the decoder can set; UNSUPPORTED_CODING (2),
+        UNSUPPORTED_RANGE (3) and NEGATIVE_VALUE (5) were removed (OP-1),
+        the gaps in the numbering are deliberate."""
         expected = {
             "NO_ERROR": 0,
             "BUFFER_OVERFLOW": 1,
-            "UNSUPPORTED_CODING": 2,
-            "UNSUPPORTED_RANGE": 3,
             "UNSUPPORTED_VIF": 4,
-            "NEGATIVE_VALUE": 5,
         }
         for name, value in expected.items():
             self.assertEqual(int(getattr(MBUS_ERROR, name)), value, name)
-        self.assertEqual(len(MBUS_ERROR), 6)
+        self.assertEqual(len(MBUS_ERROR), 3)
 
     def test_enums_behave_like_ints(self):
         """IntEnum: directly serialisable in JSON, comparable with int."""

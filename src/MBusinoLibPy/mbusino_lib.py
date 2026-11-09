@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Core class ``MBusinoLib`` - a 1:1 port of ``MBusinoLib.cpp`` (C++/Arduino).
 
-Every method states in its comment the corresponding C++ function plus the
-line number in ``MBusinoLib/src/MBusinoLib.cpp``, so you can switch
-between the two implementations function by function.
+Every method states in its comment the corresponding C++ function in
+``MBusinoLib/src/MBusinoLib.cpp``, so you can switch between the two
+implementations function by function.
 
 Deliberate deviations from the original (spec item 4 of the porting task):
 
@@ -11,7 +11,7 @@ Deliberate deviations from the original (spec item 4 of the porting task):
   is dropped completely - the Python API takes ``bytes``/``bytearray`` as
   arguments. Only ``_error`` remains, just like the C++ ``_error``.
 * ``get_error()`` behaves like the C++ version: it returns **and** clears
-  the error (MBusinoLib.cpp line 54-58).
+  the error (the C++ ``getError()``).
 * Instead of UB (out-of-bounds reads in the original) Python stops cleanly
   and sets ``BUFFER_OVERFLOW`` - every affected spot is commented
   individually.
@@ -30,7 +30,7 @@ import struct
 from enum import IntEnum  # noqa: F401  (imported only so the type is available)
 
 from .enums import (
-    ARDUINO_FLOAT_DECIMALS,  # noqa: F401  (Dokumentationswert, s. enums.py)
+    ARDUINO_FLOAT_DECIMALS,  # noqa: F401  (documentation value, see enums.py)
     ARDUINO_FLOAT_MIN,  # noqa: F401
     MBUS_DEFAULT_BUFFER_SIZE,  # noqa: F401
     MBUS_CODE,
@@ -49,11 +49,12 @@ from .vif_defs import VIF_DEFS
 # ---------------------------------------------------------------------------
 # NEW (not present in MBusinoLib): readable error messages
 # ---------------------------------------------------------------------------
-# Mapping follows the `enum MBUS_ERROR` from MBusinoLib.h line 185-192.
-# UNSUPPORTED_CODING / UNSUPPORTED_RANGE / NEGATIVE_VALUE are leftovers
-# from the old AllWize encoder - the decoder never sets them
-# (proof: the only error assignments in MBusinoLib.cpp are lines 226,
-# 283 and 382), but they are listed here for completeness.
+# Mapping follows the `enum MBUS_ERROR` from MBusinoLib.h. The C++ enum
+# still carries UNSUPPORTED_CODING (2), UNSUPPORTED_RANGE (3) and
+# NEGATIVE_VALUE (5) - leftovers from the old AllWize encoder that the
+# decoder never sets (the only error assignments in MBusinoLib.cpp live in
+# decodeRecords(): BUFFER_OVERFLOW twice, UNSUPPORTED_VIF once) - they were
+# dropped from the Python enum, see enums.py.
 _ERROR_MESSAGES = {
     MBUS_ERROR.NO_ERROR: "No error.",
     MBUS_ERROR.BUFFER_OVERFLOW: (
@@ -61,19 +62,9 @@ _ERROR_MESSAGES = {
         "fit into the given data, or a record would run past the end of the "
         "buffer."
     ),
-    MBUS_ERROR.UNSUPPORTED_CODING: (
-        "Unsupported data coding (DIF coding)."
-    ),
-    MBUS_ERROR.UNSUPPORTED_RANGE: (
-        "Unsupported value range: combination of code and scaling not "
-        "representable."
-    ),
     MBUS_ERROR.UNSUPPORTED_VIF: (
         "Unknown or unsupported VIF - the record could not be matched to any "
         "definition in vif_defs."
-    ),
-    MBUS_ERROR.NEGATIVE_VALUE: (
-        "Negative value, which is not supported by the original."
     ),
 }
 
@@ -110,7 +101,7 @@ def _to_int32(value: int) -> int:
 
 
 def _parse_hex(text: str):
-    """Corresponds to ``parseHex()`` in test_decode.cpp line 10-22.
+    """Corresponds to ``parseHex()`` in test_decode.cpp.
 
     Splits "68 56 56 68 ..." / "0x68,0x56,..." input into a byte sequence.
     Convenience for ``decode_telegram("68 56 ...")`` - the original reads
@@ -133,7 +124,7 @@ def _parse_hex(text: str):
 class MBusinoLib:
     """Decoder for M-Bus RSP_UD telegrams - counterpart of the C++ class.
 
-    C++: ``class MBusinoLib`` in MBusinoLib.h line 369-399.
+    C++: ``class MBusinoLib`` in MBusinoLib.h.
 
     Example::
 
@@ -143,10 +134,10 @@ class MBusinoLib:
         print(decode.get_error())
     """
 
-    # __init__ corresponds to MBusinoLib::MBusinoLib() in MBusinoLib.cpp line 27-31.
+    # __init__ corresponds to MBusinoLib::MBusinoLib() in MBusinoLib.cpp.
     # That constructor only allocates the work buffer and sets _cursor/_error;
     # there is no buffer in Python (spec item 4) and _error starts at
-    # NO_ERROR like in C++ (MBusinoLib.h line 398: ``uint8_t _error = NO_ERROR;``).
+    # NO_ERROR like in C++ (``uint8_t _error = NO_ERROR;`` in MBusinoLib.h).
     def __init__(self) -> None:
         self._error: IntEnum = MBUS_ERROR.NO_ERROR
 
@@ -154,7 +145,7 @@ class MBusinoLib:
     # Errors
     # ------------------------------------------------------------------
     def get_error(self) -> int:
-        """Corresponds to MBusinoLib::getError() in MBusinoLib.cpp line 54-58.
+        """Corresponds to MBusinoLib::getError() in MBusinoLib.cpp.
 
         Like the original: returns the error code AND clears the internal
         error back to ``NO_ERROR``. To keep the value, read
@@ -192,7 +183,7 @@ class MBusinoLib:
     # Lookup tables (correspond to the four C++ switch methods)
     # ------------------------------------------------------------------
     def get_code_name(self, code: int) -> str:
-        """Corresponds to MBusinoLib::getCodeName() in MBusinoLib.cpp line 847-1165.
+        """Corresponds to MBusinoLib::getCodeName() in MBusinoLib.cpp.
 
         :param code: MBUS_CODE value (e.g. ``MBUS_CODE.ENERGY_WH``)
         :return: record name like "energy", "" for unknown codes (C++: default)
@@ -200,7 +191,7 @@ class MBusinoLib:
         return CODE_NAME.get(code, "")
 
     def get_code_units(self, code: int):
-        """Corresponds to MBusinoLib::getCodeUnits() in MBusinoLib.cpp line 660-845.
+        """Corresponds to MBusinoLib::getCodeUnits() in MBusinoLib.cpp.
 
         :return: unit ("Wh", "m³", ...) or ``None`` - ``None`` corresponds to
                  the NULL pointer the original returns via ``return 0;``
@@ -215,7 +206,7 @@ class MBusinoLib:
         return CODE_UNITS.get(code)  # no entry -> None, just like in C++
 
     def get_device_class(self, code: int, medium: int = 0xFF) -> str:
-        """Corresponds to MBusinoLib::getDeviceClass() in MBusinoLib.cpp line 1182-1380.
+        """Corresponds to MBusinoLib::getDeviceClass() in MBusinoLib.cpp.
 
         :param code: MBUS_CODE value
         :param medium: M-Bus medium byte from ``decode_header()`` ("medium_code"),
@@ -229,14 +220,14 @@ class MBusinoLib:
             >>> MBusinoLib().get_device_class(MBUS_CODE.VOLUME_M3, medium=0x03)
             'gas'
         """
-        # C++ line 1202-1206: the three volume codes call the medium helper
+        # in getDeviceClass(): the three volume codes call the medium helper
         # (case VOLUME_M3 / VOLUME_FT3 / VOLUME_GAL).
         if code in (MBUS_CODE.VOLUME_M3, MBUS_CODE.VOLUME_FT3, MBUS_CODE.VOLUME_GAL):
             return _volume_class_from_medium(medium)
         return DEVICE_CLASS.get(code, "")
 
     def get_state_class(self, code: int) -> str:
-        """Corresponds to MBusinoLib::getStateClass() in MBusinoLib.cpp line 1382-1525.
+        """Corresponds to MBusinoLib::getStateClass() in MBusinoLib.cpp.
 
         :return: "total_increasing" / "measurement" / "" (C++: default)
         """
@@ -249,7 +240,7 @@ class MBusinoLib:
     # ------------------------------------------------------------------
     @staticmethod
     def _find_definition(vif: int) -> int:
-        """Corresponds to MBusinoLib::_findDefinition() in MBusinoLib.cpp line 1528-1539.
+        """Corresponds to MBusinoLib::_findDefinition() in MBusinoLib.cpp.
 
         Searches for the FIRST table entry with ``base <= vif < base + size``.
 
@@ -263,7 +254,7 @@ class MBusinoLib:
 
     @staticmethod
     def _get_vif(code: int, scalar: int) -> int:
-        """Corresponds to MBusinoLib::_getVIF() in MBusinoLib.cpp line 1541-1555.
+        """Corresponds to MBusinoLib::_getVIF() in MBusinoLib.cpp.
 
         Inverse of ``_find_definition``: returns the VIF matching code and
         scaling (the original never calls it while decoding, only the
@@ -282,7 +273,7 @@ class MBusinoLib:
     # Records
     # ------------------------------------------------------------------
     def decode_records(self, buffer, size: int = None) -> list:
-        """Corresponds to MBusinoLib::decodeRecords() in MBusinoLib.cpp line 62-657.
+        """Corresponds to MBusinoLib::decodeRecords() in MBusinoLib.cpp.
 
         Splits the payload area of a telegram into individual records.
 
@@ -321,39 +312,39 @@ class MBusinoLib:
             raise _OutOfBounds(pos)
 
         try:
-            # `while (index < size)` - MBusinoLib.cpp line 66
+            # `while (index < size)` in decodeRecords()
             while index < size:
                 # ------------------------------------------------------------ #
-                # decode the DIF - MBusinoLib.cpp line 71-162
+                # decode the DIF (decodeRecords())
                 # ------------------------------------------------------------ #
                 dif = rd(index)          # C++: uint8_t dif = buffer[index++];
                 index += 1
                 dif_least4bit = dif & 0x0F
                 dif_function_field = (dif & 0x30) >> 4
 
-                # switch(difLeast4bit) - MBusinoLib.cpp line 98-162:
+                # switch(difLeast4bit) in decodeRecords():
                 # -> (length in bytes, data coding type)
                 #   0 = no data, 1 = integer, 2 = BCD, 3 = real (float32),
                 #   4 = variable length, 5 = special function,
                 #   6 = date+time type F, 7 = date type G
                 #   (6/7 are applied further down via the VIF)
                 #
-                # C++ table (line 80-95): DIF bits 0..3 = length/coding,
+                # C++ table (DIF comment in decodeRecords()): DIF bits 0..3 = length/coding,
                 # bits 4..5 = function (0=current,1=_max,2=_min,3=_err)
                 length, data_coding_type = _DIF_TABLE[dif_least4bit]
 
-                # append the function field - MBusinoLib.cpp line 164-179
+                # append the function field - switch(difFunctionField) in decodeRecords()
                 function_field = _FUNCTION_FIELDS[dif_function_field]
 
                 # ------------------------------------------------------------ #
-                # handle the DIFEs - MBusinoLib.cpp line 181-211
+                # handle the DIFEs (decodeRecords())
                 # ------------------------------------------------------------ #
                 # bit 6 of the DIF pre-sets "storage 1"
                 storage_number = 1 if (dif & 0x40) == 0x40 else 0
                 dife_number = 0
                 # C++: uint8_t dife[10] = {0};  (index 0 stays unused,
                 # the DIFEs start at index 1 - therefore 11 slots here, so
-                # the C++ access dife[difeNumber+1] (line 197-208) at the end
+                # the C++ access dife[difeNumber+1] at the end of the DIFE loop
                 # of the loop hits the value 0 instead of running past the array)
                 dife = [0] * 11
                 if_dife = (dif & 0x80) == 0x80  # Bit 7 = "eine DIFE folgt"
@@ -362,11 +353,11 @@ class MBusinoLib:
                     if dife_number > 9:
                         # C++ writes past dife[10] here (UB)
                         raise _OutOfBounds(dife_number)
-                    dife[dife_number] = rd(index)      # C++ line 191
+                    dife[dife_number] = rd(index)      # C++: dife[difeNumber] = buffer[index];
                     if_dife = (rd(index) & 0x80) == 0x80  # weitere DIFE?
                     index += 1
 
-                # evaluate the DIFEs - MBusinoLib.cpp line 194-210
+                # evaluate the DIFEs (decodeRecords())
                 sub_unit = 0
                 tariff = 0
                 i = 0
@@ -380,10 +371,10 @@ class MBusinoLib:
                     tariff |= (((dife[i + 1] & 0x30) >> 4) << (2 * i))
                     i += 1
 
-                # end of DIFE handling (C++: "// End of DIFE handling" line 212)
+                # end of DIFE handling (C++ comment "// End of DIFE handling")
 
                 # ------------------------------------------------------------ #
-                # fetch the VIF(E) - MBusinoLib.cpp line 213-246
+                # fetch the VIF(E) (decodeRecords())
                 # ------------------------------------------------------------ #
                 vif = 0
                 vifarray = [0] * 10          # C++: uint8_t vifarray[10] = {0};
@@ -394,17 +385,17 @@ class MBusinoLib:
 
                 while True:
                     if index == size:
-                        # C++ line 225-228: explicit BUFFER_OVERFLOW
+                        # C++: explicit BUFFER_OVERFLOW when index == size
                         self._error = MBUS_ERROR.BUFFER_OVERFLOW
                         return records
                     if vifcounter > 9:
                         # C++ reads past vifarray[10] here (UB)
                         raise _OutOfBounds(vifcounter)
-                    vifarray[vifcounter] = rd(index)   # C++ line 230
+                    vifarray[vifcounter] = rd(index)   # C++: vifarray[vifcounter] = buffer[index++];
                     index += 1
 
                     if (vifarray[0] & 0x7F) == 0x7C and vifcounter == 0:
-                        # Customized ASCII VIF (C++ line 232-237):
+                        # Customized ASCII VIF (in decodeRecords()):
                         # the next byte is the length of the ASCII string
                         custom_vif_len = rd(index)
                         if vifarray[0] == 0xFC:
@@ -413,10 +404,10 @@ class MBusinoLib:
                             index = index + custom_vif_len + 1
 
                     if vifcounter < 2:
-                        # normally VIF + first VIFE are enough (C++ line 239)
+                        # normally VIF + first VIFE are enough (C++: if(vifcounter < 2))
                         vif = (vif << 8) + vifarray[vifcounter]
                     elif vifcounter == 2 and vif == 0xFDFD:
-                        # ... unless VIF 0xFDFD needs the third byte (line 242)
+                        # ... unless VIF 0xFDFD needs the third byte (C++: vifcounter == 2 && vif == 0xFDFD)
                         vif = (vif << 8) + vifarray[vifcounter]
 
                     vifcounter += 1
@@ -425,7 +416,7 @@ class MBusinoLib:
                         break
 
                 # ------------------------------------------------------------ #
-                # fine-tune the VIF - MBusinoLib.cpp line 248-276
+                # fine-tune the VIF (decodeRecords())
                 # ------------------------------------------------------------ #
                 # When the top bit is set in the FIRST byte and it is none of
                 # the "extension marker bytes" 0xFD/0xFC/0xFB/0xFF, the real
@@ -440,17 +431,17 @@ class MBusinoLib:
                     vif = vifarray[0] & 0x7F
 
                 if vifarray[0] == 0x7C:
-                    vif = 0x7C00   # C++ line 253-255
+                    vif = 0x7C00   # C++: if(vifarray[0] == 0x7C) vif = 0x7C00;
 
                 # 0x6D = date+time type F, 0x6C = date type G -> overwrite
-                # the coding independently of the DIF (C++ line 257-263)
+                # the coding independently of the DIF (the C++ sets dataCodingType from the VIF here)
                 if (vif & 0x7F) == 0x6D:
                     data_coding_type = 6
                 elif (vif & 0x7F) == 0x6C:
                     data_coding_type = 7
                 elif (vif & 0x7F00) == 0x7C00:
                     # Customized ASCII VIF: actually read the string now
-                    # (C++ line 264-277)
+                    # (C++: customized ASCII VIF block in decodeRecords())
                     vif = 0xFC00
                     if vifarray[0] == 0xFC:
                         # for 0xFC the string was already skipped above,
@@ -459,7 +450,7 @@ class MBusinoLib:
                     # C++: char vifBuffer[customVIFlen + 1]; (uninitialised!)
                     vif_buffer = [0] * (custom_vif_len + 1)
                     for i in range(custom_vif_len + 1):
-                        # C++ line 271: vifBuffer[customVIFlen-i] = buffer[index - vifcounter + 1];
+                        # C++: vifBuffer[customVIFlen-i] = buffer[index - vifcounter + 1];
                         # The read start shifts by -vifcounter because index
                         # is further ahead in the 0xFC case (past the VIFE(s)) -
                         # at the end the pointer is exactly on the length byte.
@@ -477,12 +468,12 @@ class MBusinoLib:
                     )[:19]
                     if_custom_vif = True
 
-                # clear bit 7 of the last VIF byte (C++ line 278), otherwise
+                # clear bit 7 of the last VIF byte (C++: vif &= 0xFFFFFF7F), otherwise
                 # _findDefinition() finds no match
                 vif = vif & 0xFFFFFF7F
 
                 # ------------------------------------------------------------ #
-                # look up the definition - MBusinoLib.cpp line 280-287
+                # look up the definition - _findDefinition() in the C++ original
                 # ------------------------------------------------------------ #
                 def_index = self._find_definition(vif)
                 if def_index < 0:
@@ -493,7 +484,7 @@ class MBusinoLib:
                     def_index = 0
 
                 # ------------------------------------------------------------ #
-                # VIFE extensions - MBusinoLib.cpp line 288-378
+                # VIFE extensions (decodeRecords())
                 # ------------------------------------------------------------ #
                 extension_scaler = 0                # C++: int8_t extensionScaler
                 extension_additive_constant = 0.0   # C++: double extensionAdditiveConstant
@@ -544,7 +535,7 @@ class MBusinoLib:
                             no_unit = True
                         elif byte == 0xFC or byte == 0xFF:
                             # "reading user" extension: the NEXT byte
-                            # selects phase/reference (C++ line 334-372)
+                            # selects phase/reference (C++: switch(vifExtensionBuffer))
                             if extensions_counter + 1 > 9:
                                 raise _OutOfBounds(extensions_counter + 1)
                             extension_buffer = vifarray[extensions_counter + 1] & 0x7F
@@ -557,37 +548,37 @@ class MBusinoLib:
                             break
 
                 # ------------------------------------------------------------ #
-                # buffer overflow check - MBusinoLib.cpp line 380-384
+                # buffer overflow check (decodeRecords())
                 # ------------------------------------------------------------ #
                 if index + length > size or index + length > buf_len:
                     self._error = MBUS_ERROR.BUFFER_OVERFLOW
                     return records
 
                 # ------------------------------------------------------------ #
-                # read the value - MBusinoLib.cpp line 386-580
+                # read the value (decodeRecords())
                 # ------------------------------------------------------------ #
-                value16 = 0            # C++ line 387: int16_t - notices negative 2-byte values
-                value32 = 0            # C++ line 388: int32_t - notices negative 4-byte values
-                value = 0              # C++ line 389: int64_t
-                value_float = 0.0      # C++ line 391: float (a real 32-bit number!)
-                date = b""             # C++ line 395: uint8_t date[len]
-                datestring = ""        # C++ line 396: char datestring[16]
-                datestring2 = ""       # C++ line 397: char datestring2[30]
-                value_string = ""      # C++ line 398: char valueString[30]
-                switch_again = False   # C++ line 399
-                negative = False       # C++ line 400
-                ascii_value = 0        # C++ line 401: 0=double, 1=ASCII, 2=both
+                value16 = 0            # C++: int16_t value16 - notices negative 2-byte values
+                value32 = 0            # C++: int32_t value32 - notices negative 4-byte values
+                value = 0              # C++: int64_t value
+                value_float = 0.0      # C++: float valueFloat (a real 32-bit number!)
+                date = b""             # C++: uint8_t date[len]
+                datestring = ""        # C++: char datestring[16]
+                datestring2 = ""       # C++: char datestring2[30]
+                value_string = ""      # C++: char valueString[30]
+                switch_again = False   # C++: bool switchAgain
+                negative = False       # C++: bool negative
+                ascii_value = 0        # C++: uint8_t asciiValue (0=double, 1=ASCII, 2=both)
 
                 # C++: do { switch(dataCodingType) ... } while(switchAgain);
                 while True:
                     switch_again = False
 
                     if data_coding_type == 0:
-                        # case 0 (C++ line 405): no data, value stays 0
+                        # case 0: no data, value stays 0 (C++: case 0)
                         pass
 
                     elif data_coding_type == 1:
-                        # case 1 (C++ line 408-425): integer, LITTLE-ENDIAN
+                        # case 1: integer, LITTLE-ENDIAN (C++: case 1)
                         # (the loop builds the byte at index len-i-1 into the
                         # most significant byte - M-Bus sends LSB first)
                         if length == 2:
@@ -606,7 +597,7 @@ class MBusinoLib:
                                 value = (value << 8) + rd(index + length - i - 1)
 
                     elif data_coding_type == 2:
-                        # case 2 (C++ line 427-461): BCD, 2 digits per byte
+                        # case 2: BCD, 2 digits per byte (C++: case 2)
                         if length == 2:
                             value16 = 0
                         elif length == 4:
@@ -635,11 +626,11 @@ class MBusinoLib:
                         elif length == 4:
                             value = _to_int32(value32)
                         if negative:
-                            # C++ line 458-460: only BCD has the negative case
+                            # C++: only BCD has the negative case
                             value = value * -1
 
                     elif data_coding_type == 3:
-                        # case 3 (C++ line 464-467): real = IEEE-754 32 bit
+                        # case 3: real = IEEE-754 32 bit (C++: case 3)
                         value = 0
                         for i in range(length):
                             value = (value << 8) + rd(index + length - i - 1)
@@ -651,13 +642,13 @@ class MBusinoLib:
                         )[0]
 
                     elif data_coding_type == 4:
-                        # case 4 (C++ line 470-522): variable length, LVAR
+                        # case 4: variable length, LVAR (C++: case 4)
                         #   00..BFh ASCII, C0..CFh positive BCD,
                         #   D0..DFh negative BCD, E0..EFh bytes as integer,
                         #   F0..FAh bytes as float, FB..FFh reserved
                         lvar = rd(index)
                         if lvar <= 0xBF:
-                            # ASCII string with LVAR characters (C++ line 483-494)
+                            # ASCII string with LVAR characters (C++: LVAR 0x00-0xBF)
                             length = lvar
                             index += 1
                             char_buffer = [0] * (length + 1)
@@ -672,26 +663,26 @@ class MBusinoLib:
                             )[:29]
                             ascii_value = 1
                         elif 0xC0 <= lvar <= 0xCF:
-                            # positive BCD, (LVAR - C0h) bytes (C++ line 495)
+                            # positive BCD, (LVAR - C0h) bytes (C++: LVAR 0xC0-0xCF)
                             length = lvar - 0xC0
                             index += 1
                             data_coding_type = 2
                             switch_again = True
                         elif 0xD0 <= lvar <= 0xDF:
-                            # negative BCD (C++ line 501)
+                            # negative BCD (C++: LVAR 0xD0-0xDF)
                             length = lvar - 0xD0
                             index += 1
                             data_coding_type = 2
                             switch_again = True
                             negative = True
                         elif 0xE0 <= lvar <= 0xEF:
-                            # binary number, (LVAR - E0h) bytes (C++ line 508)
+                            # binary number, (LVAR - E0h) bytes (C++: LVAR 0xE0-0xEF)
                             length = lvar - 0xE0
                             index += 1
                             data_coding_type = 1
                             switch_again = True
                         elif 0xF0 <= lvar <= 0xFA:
-                            # floating point, (LVAR - F0h) bytes (C++ line 515)
+                            # floating point, (LVAR - F0h) bytes (C++: LVAR 0xF0-0xFA)
                             length = lvar - 0xF0
                             index += 1
                             data_coding_type = 3
@@ -700,17 +691,17 @@ class MBusinoLib:
                         # length stays 0 and the next record follows
 
                     elif data_coding_type == 5:
-                        # case 5 (C++ line 524): special function, nothing to do
+                        # case 5: special function, nothing to do (C++: case 5)
                         pass
 
                     elif data_coding_type == 6:
-                        # case 6 (C++ line 527-552): date+time type F, 4 bytes
+                        # case 6: date+time type F, 4 bytes (C++: case 6)
                         date = data[index:index + length]
                         if len(date) < 4:
                             # C++ reads date[0..3] out of a too small VLA (UB)
                             raise _OutOfBounds(len(date))
                         if (date[0] & 0x80) == 0:
-                            # bit 7 of the minutes byte = "time invalid" (C++ line 531)
+                            # bit 7 of the minutes byte = "time invalid" (C++ checks (date[0] & 0x80))
                             year = ((date[2] & 0xE0) >> 5) | ((date[3] & 0xF0) >> 1)
                             month = date[3] & 0x0F
                             mday = date[2] & 0x1F
@@ -732,12 +723,12 @@ class MBusinoLib:
                             ascii_value = 2
 
                     elif data_coding_type == 7:
-                        # case 7 (C++ line 554-578): date type G, 2 bytes
+                        # case 7: date type G, 2 bytes (C++: case 7)
                         date = data[index:index + length]
                         if len(date) < 2:
                             raise _OutOfBounds(len(date))
                         if (date[1] & 0x0F) <= 12:
-                            # month > 12 = invalid (C++ line 560)
+                            # month > 12 = invalid (C++ checks (date[1] & 0x0F) > 12)
                             year = ((date[0] & 0xE0) >> 5) | ((date[1] & 0xF0) >> 1)
                             month = date[1] & 0x0F
                             mday = date[0] & 0x1F
@@ -750,16 +741,16 @@ class MBusinoLib:
                     if not switch_again:
                         break
 
-                # C++ line 582: index += len;
+                # C++: index += len;
                 index += length
 
                 # ------------------------------------------------------------ #
-                # scaling - MBusinoLib.cpp line 584-606
+                # scaling (decodeRecords())
                 # ------------------------------------------------------------ #
                 scaled = 0.0
                 scalar = 0
                 if def_index != 0:
-                    # C++ line 587-589 (uint32_t arithmetic, result truncated
+                    # C++ (uint32_t arithmetic, result truncated
                     # to int8_t - see _to_int8):
                     #   scalar = vif_defs[def].scalar + vif - vif_defs[def].base + extensionScaler
                     _code, base, _size, def_scalar = VIF_DEFS[def_index]
@@ -769,7 +760,7 @@ class MBusinoLib:
                     # real floating point: only the VIF scaling value counts
                     scaled = value_float
                     if vifarray[0] != 0xFF:
-                        # C++ line 591-596: first multiply by 10,
+                        # C++: first multiply by 10,
                         # then (when scalar is negative) divide by 10 and
                         # finally add the additive constant - the ORDER is
                         # exactly like the original so the result stays
@@ -781,7 +772,7 @@ class MBusinoLib:
                         scaled = scaled + extension_additive_constant
                 elif vifarray[0] == 0xFF:
                     # manufacturer specific: do NOT scale, do NOT add
-                    scaled = float(value)   # C++ line 599-600
+                    scaled = float(value)   # C++: scaled = value;
                 else:
                     scaled = float(value)
                     for _ in range(scalar if scalar > 0 else 0):
@@ -791,27 +782,27 @@ class MBusinoLib:
                     scaled = scaled + extension_additive_constant
 
                 # ------------------------------------------------------------ #
-                # build the record - MBusinoLib.cpp line 608-646
+                # build the record (decodeRecords())
                 # ------------------------------------------------------------ #
                 # The key order matches the C++ writing order exactly.
                 record = {}
-                # C++ line 610: String("0x" + String(vif,HEX)) -> lower-case
+                # C++: String("0x" + String(vif,HEX)) -> lower-case
                 # hex without leading zeros
                 record["vif"] = "0x%x" % vif
                 record["code"] = VIF_DEFS[def_index][0]
 
                 if ascii_value != 1:
-                    # C++ line 616-620: plain numeric value (not for ASCII)
+                    # C++: plain numeric value (not for ASCII)
                     record["value_scaled"] = scaled
                 if ascii_value > 0:
-                    # C++ line 621-623: formatted string (date/ASCII)
+                    # C++: formatted string (date/ASCII)
                     record["value_string"] = value_string
 
                 if if_custom_vif:
-                    # C++ line 624-626: unit comes from the ASCII VIF
+                    # C++: unit comes from the ASCII VIF
                     record["units"] = custom_vif
                 elif self.get_code_units(VIF_DEFS[def_index][0]) is not None and not no_unit:
-                    # C++ line 627-629: unit from the lookup table;
+                    # C++: unit from the lookup table;
                     # "noUnit" switches the unit off (e.g. for _TimeSt)
                     record["units"] = self.get_code_units(VIF_DEFS[def_index][0])
 
@@ -829,7 +820,7 @@ class MBusinoLib:
                 records.append(record)
 
                 # ------------------------------------------------------------ #
-                # trailing markers - MBusinoLib.cpp line 648-655
+                # trailing markers (decodeRecords())
                 # ------------------------------------------------------------ #
                 # Check the byte that FOLLOWS the record. In C++ `index != size`
                 # comes AFTER the read (so one byte is always read, even
@@ -857,7 +848,7 @@ class MBusinoLib:
     # Header
     # ------------------------------------------------------------------
     def decode_header(self, buffer, length: int = None) -> dict:
-        """Corresponds to MBusinoLib::decodeHeader() in MBusinoLib.cpp line 1563-1677.
+        """Corresponds to MBusinoLib::decodeHeader() in MBusinoLib.cpp.
 
         Decodes the fixed data header of a long frame telegram.
 
@@ -883,44 +874,44 @@ class MBusinoLib:
         if length is None:
             length = len(data)
 
-        # 1. minimum length for a long frame with fixed data header (C++ line 1570-1574)
+        # 1. minimum length for a long frame with fixed data header (C++: if (length < 19))
         if length < 19 or len(data) < 19:
             return {}
-        # 2. check the start bytes 68 ... 68 (C++ line 1576-1579)
+        # 2. check the start bytes 68 ... 68 (C++: buffer[0] != 0x68 || buffer[3] != 0x68)
         if data[0] != 0x68 or data[3] != 0x68:
             return {}
-        # 3. both length fields must be identical (C++ line 1581-1584)
+        # 3. both length fields must be identical (C++)
         if data[1] != data[2]:
             return {}
 
         header = {
-            "len": data[1],          # C++ line 1587
-            "c_field": data[4],      # C++ line 1588
-            "address": data[5],      # C++ line 1589  (the C++ README calls this "a_field"!)
-            "ci_field": data[6],     # C++ line 1590
+            "len": data[1],
+            "c_field": data[4],
+            "address": data[5],      # in decodeHeader() (the C++ README calls this "a_field"!)
+            "ci_field": data[6],
         }
 
         # Only CI 0x72 (long/variable) and 0x76 (short/variable) carry the
-        # fixed data header (C++ line 1594-1596)
+        # fixed data header (C++: if (buffer[6] == 0x72 || buffer[6] == 0x76))
         if data[6] not in (0x72, 0x76):
             return header  # -> corresponds to `return false` after writing
 
-        # 4. identification number, 4 byte BCD, LSB first (C++ line 1599-1602)
+        # 4. identification number, 4 byte BCD, LSB first (C++ decodeHeader() step 4)
         header["id"] = "%02X%02X%02X%02X" % (data[10], data[9], data[8], data[7])
-        # 5. manufacturer, 2 byte, LSB first -> 3 letters of 5 bits each (line 1605-1612)
+        # 5. manufacturer, 2 byte, LSB first -> 3 letters of 5 bits each
         manuf_code = (data[12] << 8) | data[11]
         header["manufacturer"] = "".join(
             chr(((manuf_code >> shift) & 0x001F) + 64) for shift in (10, 5, 0)
         )
-        # 6. version (C++ line 1615)
+        # 6. version
         header["version"] = data[13]
-        # 7. medium as code and as text (C++ line 1618-1636)
+        # 7. medium as code and as text
         medium = data[14]
         header["medium_code"] = medium
         header["medium"] = MEDIUM_NAMES.get(medium, "Unknown")
-        # 8. transmission counter (C++ line 1639)
+        # 8. transmission counter
         header["access_counter"] = data[15]
-        # 9. status byte incl. bit breakdown (C++ line 1642-1651)
+        # 9. status byte incl. bit breakdown
         status = data[16]
         header["status"] = status
         app_error = status & 0x03
@@ -937,7 +928,7 @@ class MBusinoLib:
         elif app_error == 0x02:
             status_details["app_status"] = "any_error"
         header["status_details"] = status_details
-        # 10. signature, 2 byte, LSB first (C++ line 1654-1656)
+        # 10. signature, 2 byte, LSB first
         header["signature"] = (data[18] << 8) | data[17]
 
         return header
@@ -951,11 +942,11 @@ class MBusinoLib:
         Frame rules like ``test_decode.cpp``:
 
         * layout ``68 LL LL 68 C A CI ... CHK 16``
-        * ``packet_size = data[1] + 6`` (test_decode.cpp line 51: 4 bytes
+        * ``packet_size = data[1] + 6`` (test_decode.cpp main(): 4 bytes
           start/length + L payload + checksum + stop byte)
-        * records start at offset ``0x13`` (test_decode.cpp line 53:
+        * records start at offset ``0x13`` (test_decode.cpp main() start_address:
           "Standard: skip header + fixed data header")
-        * record length ``packet_size - 0x13 - 2`` (test_decode.cpp line 64:
+        * record length ``packet_size - 0x13 - 2`` (test_decode.cpp main() data_len:
           the 2 are checksum and stop byte)
 
         :param raw: telegram as ``bytes``/``bytearray``/list of values or
@@ -999,7 +990,7 @@ class MBusinoLib:
 
         # --- initial values for the frame checks ---------------------
         byte_count = len(data)
-        too_short = byte_count < 6      # test_decode.cpp line 37-40
+        too_short = byte_count < 6      # test_decode.cpp main(): "telegram too short" check
         packet_size = None
         start_ok = False
         length_ok = False
@@ -1020,10 +1011,10 @@ class MBusinoLib:
         else:
             # packet size: 68 | LL | LL | 68 | C | A | CI | data | CHK | 16
             #   -> 4 header bytes + LL bytes (C up to end of data) + CHK + 16
-            packet_size = data[1] + 6          # test_decode.cpp line 51
+            packet_size = data[1] + 6          # test_decode.cpp main(): frame size
             start_ok = data[0] == 0x68 and data[3] == 0x68  # test_decode does NOT check this
             length_ok = data[1] == data[2]     # both length fields identical
-            fits = packet_size <= byte_count    # test_decode.cpp line 56-60
+            fits = packet_size <= byte_count    # test_decode.cpp main(): truncation guard
             if fits:
                 # checksum: byte in front of the stop byte
                 #   C++/EN 13757: plain byte sum from the C field (offset 4)
@@ -1059,8 +1050,8 @@ class MBusinoLib:
             if fits:
                 header = self.decode_header(data, packet_size)          # C++ decodeHeader()
                 # data from offset 0x13, without checksum(1) and stop byte(1)
-                start_address = 0x13                                     # test_decode.cpp line 53
-                data_len = max(0, packet_size - start_address - 2)       # test_decode.cpp line 64
+                start_address = 0x13                                     # test_decode.cpp main(): skip header + fixed data
+                data_len = max(0, packet_size - start_address - 2)       # test_decode.cpp main(): records length
                 records = self.decode_records(data[start_address:packet_size], data_len)
                 error = self._error
 
@@ -1105,36 +1096,36 @@ class MBusinoLib:
 
 
 # ---------------------------------------------------------------------------
-# DIF table (C++: switch(difLeast4bit) in MBusinoLib.cpp line 98-162)
+# DIF table (C++: switch(difLeast4bit) in decodeRecords())
 # index = low 4 bits of the DIF, value = (length in bytes, data coding type)
 #   type: 0 = no data, 1 = integer, 2 = BCD, 3 = real,
 #         4 = variable, 5 = special function
 # ---------------------------------------------------------------------------
 _DIF_TABLE = (
-    (0, 0),   # 0x00 -> No data            (C++ line  99)
-    (1, 1),   # 0x01 -> 8 Bit Integer      (C++ line 102)
-    (2, 1),   # 0x02 -> 16 Bit Integer     (C++ line 105)
-    (3, 1),   # 0x03 -> 24 Bit Integer     (C++ line 108)
-    (4, 1),   # 0x04 -> 32 Bit Integer     (C++ line 111)
-    (4, 3),   # 0x05 -> 32 Bit Real        (C++ line 114)
-    (6, 1),   # 0x06 -> 48 Bit Integer     (C++ line 117)
-    (8, 1),   # 0x07 -> 64 Bit Integer     (C++ line 120)
-    (0, 0),   # 0x08 -> Selection for Readout, not supported (C++ line 123)
-    (1, 2),   # 0x09 -> 2 digit BCD        (C++ line 126)
-    (2, 2),   # 0x0A -> 4 digit BCD        (C++ line 129)
-    (3, 2),   # 0x0B -> 6 digit BCD        (C++ line 132)
-    (4, 2),   # 0x0C -> 8 digit BCD        (C++ line 135)
-    (0, 4),   # 0x0D -> variable length    (C++ line 138)
-    (6, 2),   # 0x0E -> 12 digit BCD       (C++ line 141)
-    (0, 5),   # 0x0F -> Special Functions  (C++ line 144)
+    (0, 0),   # 0x00 -> No data           
+    (1, 1),   # 0x01 -> 8 Bit Integer     
+    (2, 1),   # 0x02 -> 16 Bit Integer    
+    (3, 1),   # 0x03 -> 24 Bit Integer    
+    (4, 1),   # 0x04 -> 32 Bit Integer    
+    (4, 3),   # 0x05 -> 32 Bit Real       
+    (6, 1),   # 0x06 -> 48 Bit Integer    
+    (8, 1),   # 0x07 -> 64 Bit Integer    
+    (0, 0),   # 0x08 -> Selection for Readout, not supported
+    (1, 2),   # 0x09 -> 2 digit BCD       
+    (2, 2),   # 0x0A -> 4 digit BCD       
+    (3, 2),   # 0x0B -> 6 digit BCD       
+    (4, 2),   # 0x0C -> 8 digit BCD       
+    (0, 4),   # 0x0D -> variable length   
+    (6, 2),   # 0x0E -> 12 digit BCD      
+    (0, 5),   # 0x0F -> Special Functions 
 )
 
-# Function field (C++: switch(difFunctionField) in MBusinoLib.cpp line 164-179)
+# Function field (C++: switch(difFunctionField) in decodeRecords())
 # bits 4+5 of the DIF: 0=current, 1=_max, 2=_min, 3=_err
 _FUNCTION_FIELDS = ("", "_max", "_min", "_err")
 
 # Name suffixes for the "reading user" VIFE 0xFC/0xFF
-# (C++: switch(vifExtensionBuffer) in MBusinoLib.cpp line 335-371)
+# (C++: switch(vifExtensionBuffer) in decodeRecords())
 _PHASE_SUFFIX = {
     1: "_L1",
     2: "_L2",

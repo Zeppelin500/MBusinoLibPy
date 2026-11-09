@@ -161,10 +161,18 @@ class MBUS_CODE(IntEnum):
 
 
 class MBUS_ERROR(IntEnum):
-    """Error codes - corresponds to `enum MBUS_ERROR` in MBusinoLib.h line 168-176."""
+    """Error codes - corresponds to `enum MBUS_ERROR` in MBusinoLib.h.
+
+    Only the three codes the decoder can actually set are kept. The C++
+    enum still numbers the removed encoder leftovers UNSUPPORTED_CODING (2),
+    UNSUPPORTED_RANGE (3) and NEGATIVE_VALUE (5); the gaps in the numbering
+    are deliberate so the surviving codes keep their C++ values
+    (NO_ERROR=0, BUFFER_OVERFLOW=1, UNSUPPORTED_VIF=4) and decode output,
+    error messages and golden files stay identical.
+    """
     NO_ERROR = 0
     BUFFER_OVERFLOW = 1
-    UNSUPPORTED_CODING = 2
-    UNSUPPORTED_RANGE = 3
+    # 2 (UNSUPPORTED_CODING) and 3 (UNSUPPORTED_RANGE) were removed: encoder
+    # leftovers the decoder never sets - the gap is deliberate.
     UNSUPPORTED_VIF = 4
-    NEGATIVE_VALUE = 5
+    # 5 (NEGATIVE_VALUE) was removed for the same reason - deliberate gap.

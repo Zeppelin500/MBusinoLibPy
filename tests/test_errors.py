@@ -53,9 +53,6 @@ class TestGetError(unittest.TestCase):
         self.assertIn("No error", lib.get_error_message(MBUS_ERROR.NO_ERROR))
         self.assertIn("VIF", lib.get_error_message(MBUS_ERROR.UNSUPPORTED_VIF))
         self.assertIn("Buffer", lib.get_error_message(MBUS_ERROR.BUFFER_OVERFLOW))
-        self.assertIn("DIF", lib.get_error_message(MBUS_ERROR.UNSUPPORTED_CODING))
-        self.assertIn("scaling", lib.get_error_message(MBUS_ERROR.UNSUPPORTED_RANGE))
-        self.assertIn("Negative", lib.get_error_message(MBUS_ERROR.NEGATIVE_VALUE))
 
     def test_return_type_is_plain_int(self):
         lib = MBusinoLib()
@@ -93,15 +90,16 @@ class TestErrorPathsDuringDecode(unittest.TestCase):
         self.assertEqual(records, [])
 
     def test_encoder_only_codes_are_never_set_while_decoding(self):
-        """UNSUPPORTED_CODING / UNSUPPORTED_RANGE / NEGATIVE_VALUE stammen aus
-        from the old AllWize encoder and are never set while decoding
-        (proof: the only error assignments in MBusinoLib.cpp are lines
-        226, 283 and 382)."""
+        """The encoder-only codes UNSUPPORTED_CODING (2), UNSUPPORTED_RANGE (3)
+        and NEGATIVE_VALUE (5) were removed from the Python enum (OP-1) -
+        the decoder never sets them either (the only error assignments in
+        MBusinoLib.cpp live in decodeRecords(): BUFFER_OVERFLOW twice,
+        UNSUPPORTED_VIF once)."""
         lib = MBusinoLib()
         # complete records with unusual codings ...
         lib.decode_records(bytes([0x05, 0x6D, 0x00, 0x00, 0x00, 0x00]))  # real + Datum Typ F
         lib.decode_records(bytes([0x0D, 0x00, 0x02, 0x41, 0x42]))        # variable length, ASCII (2 characters)
-        # ... must not produce any of the three encoder-only codes
+        # ... must not produce any error for the unusual codings
         self.assertEqual(lib.get_error(), int(MBUS_ERROR.NO_ERROR))
 
     def test_get_error_message_for_unknown_code(self):
@@ -110,14 +108,20 @@ class TestErrorPathsDuringDecode(unittest.TestCase):
 
 
 class TestEnumMirroring(unittest.TestCase):
-    """MBUS_ERROR must match C++ so the codes stay interchangeable."""
+    """MBUS_ERROR keeps the C++ numbering for every code the decoder can set
+    (the removed encoder leftovers leave deliberate gaps, OP-1)."""
 
     def test_error_codes_as_int(self):
-        self.assertEqual([int(c) for c in MBUS_ERROR], [0, 1, 2, 3, 4, 5])
+        """Only the three codes the decoder can set - the gaps at 2, 3 and 5
+        (removed encoder leftovers, OP-1) are deliberate."""
+        self.assertEqual([int(c) for c in MBUS_ERROR], [0, 1, 4])
         self.assertEqual([c.name for c in MBUS_ERROR], [
-            "NO_ERROR", "BUFFER_OVERFLOW", "UNSUPPORTED_CODING",
-            "UNSUPPORTED_RANGE", "UNSUPPORTED_VIF", "NEGATIVE_VALUE",
+            "NO_ERROR", "BUFFER_OVERFLOW", "UNSUPPORTED_VIF",
         ])
+        # the removed encoder leftovers must be gone, the surviving codes
+        # keep their original C++ values
+        for removed in (2, 3, 5):
+            self.assertNotIn(removed, [int(c) for c in MBUS_ERROR])
 
     def test_code_names_for_home_assistant_mapping(self):
         """The codes are the bridge to the Home Assistant tables."""
