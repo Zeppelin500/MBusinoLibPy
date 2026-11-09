@@ -10,6 +10,11 @@ means "port of MBusinoLib 0.10.0".
 
 ### Added
 
+- Web decoder: the original C++ `MBusinoLib` runs alongside the Python port.
+  It is compiled to WebAssembly (`tools/wasm/build.sh` → `docs/cpp/mbusino_cpp.*`)
+  and both decoders are fed by the same hex input, showing their results side by
+  side. Requires Emscripten for rebuilds; the built artifacts are committed so
+  GitHub Pages works as-is.
 - Runnable examples in `examples/` and doctest examples in the main docstrings
   (covered by the test suite). Added `examples/minimal_hex_to_json.py`, the
   shortest end-to-end example: a telegram hex string in, JSON out.
