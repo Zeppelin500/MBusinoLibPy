@@ -16,6 +16,10 @@ means "port of MBusinoLib 0.10.0".
 
 ### Changed
 
+- Web decoder (`docs/`): the fixed-data-header list is now a two-column
+  layout (label | value). Previously it used an auto-fill grid that put `<dt>`
+  and `<dd>` in separate columns, so on wide screens a value wrapped onto the
+  next row, away from its label. Long labels now wrap inside the label column.
 - Web decoder (`docs/`): the records table lists the user-facing fields
   (`vif`, `subUnit`, `storage`, `tariff`). When the telegram is followed by
   another one (`telegramFollow` / `0x1F` marker) an orange note box under the
