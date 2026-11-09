@@ -170,7 +170,8 @@ port documentation itself is [port-notes.md](port-notes.md).
     convention (`L ≤ 250`) still hits `L = 250` → wrap.
   * The Python port is **not** affected (`data[1] + 6` is an
     arbitrary-precision int; `fits = packet_size <= byte_count`).
-* **Status:** open
+* **Status:** fixed (harness vendored into `tools/test_decode.cpp` with
+  `size_t packet_size`)
 * **Suggestion:** declare `size_t packet_size = data[1] + 6;` in the
   harness (test-only file, no library impact).
 

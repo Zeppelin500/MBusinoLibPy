@@ -13,14 +13,14 @@ script that regenerates everything.
 * `g++` (tested with 13.3)
 * the headers of [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
   (here: `~/Arduino/libraries/ArduinoJson`, version 7.4.3)
-* the original repo `MBusinoLib` with `src/MBusinoLib.{h,cpp}` and the stub
-  `test/Arduino.h`
+* the original repo `MBusinoLib` with `src/MBusinoLib.{h,cpp}` (the
+  `Arduino.h` stub is vendored here at `tools/wasm/arduino/Arduino.h`)
 
 ## The three wrappers
 
 | Wrapper | provides | Remark |
 |---------|----------|--------|
-| `test_decode` (original, `MBusinoLib/test/test_decode`) | `.hex` → `.expected.json`, `.raw.txt` | shipped in the original repo |
+| `test_decode.cpp` (vendored from `MBusinoLib/test/test_decode`) | `.hex` → `.expected.json`, `.raw.txt` | tracked here; `size_t` frame-size fix (OP-7) |
 | `test_decode_header.cpp` | `.header.json` | only `decodeHeader()` as JSON |
 | `test_decode_records.cpp` | `records/*.json` | raw buffers without a telegram frame |
 
@@ -40,31 +40,24 @@ OUT=/tmp/mbusino-harness && mkdir -p "$OUT"
 # (bug in the original - the formatted text always fits anyway).
 CXXFLAGS="-std=gnu++11 -O0 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -w"
 
-g++ $CXXFLAGS -I"$SRC/src" -I"$SRC/test" -I"$AJ" \
+g++ $CXXFLAGS -I"$SRC/src" -I tools/wasm/arduino -I"$AJ" \
     tools/test_decode_header.cpp "$SRC/src/MBusinoLib.cpp" -o "$OUT/test_decode_header"
 
-g++ $CXXFLAGS -I"$SRC/src" -I"$SRC/test" -I"$AJ" \
+g++ $CXXFLAGS -I"$SRC/src" -I tools/wasm/arduino -I"$AJ" \
     tools/test_decode_records.cpp "$SRC/src/MBusinoLib.cpp" -o "$OUT/test_decode_records"
 ```
 
-The original harness is used as it ships (pre-built): `$SRC/test/test_decode`.
-
-### Special case `mbusino_example` (30 records)
-
-`test_decode.cpp` buffers its JSON in `char jsonBuf[4096]` and truncates in
-the middle of the JSON for 30 records (the raw output contains stack garbage
-afterwards). For this single telegram a wrapper with `char jsonBuf[262144]`
-was used - otherwise exactly the same file:
+`test_decode` is built from the vendored `tools/test_decode.cpp`. Its JSON
+buffer is enlarged to 262144 bytes in the build so the 30-record
+`mbusino_example` frame fits - one binary handles every telegram
+(`make_golden.py` runs a single `test_decode` over all of them):
 
 ```bash
 sed -e 's/char jsonBuf\[4096\]/char jsonBuf[262144]/' \
-    "$SRC/test/test_decode.cpp" > "$OUT/test_decode_big.cpp"
-g++ $CXXFLAGS -I"$SRC/src" -I"$SRC/test" -I"$AJ" \
-    "$OUT/test_decode_big.cpp" "$SRC/src/MBusinoLib.cpp" -o "$OUT/test_decode_big"
+    tools/test_decode.cpp > "$OUT/test_decode.cpp"
+g++ $CXXFLAGS -I"$SRC/src" -I tools/wasm/arduino -I"$AJ" \
+    "$OUT/test_decode.cpp" "$SRC/src/MBusinoLib.cpp" -o "$OUT/test_decode"
 ```
-
-**Proof of equivalence:** for the four shorter telegrams the output of
-`test_decode` and `test_decode_big` is byte-identical (`diff`).
 
 ## Regenerating
 
