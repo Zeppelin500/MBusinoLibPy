@@ -232,6 +232,11 @@ The decoder itself can produce these codes:
 | 1 | `BUFFER_OVERFLOW` | declared length does not fit, or a record reaches past the buffer |
 | 4 | `UNSUPPORTED_VIF` | VIF is not known; the record falls back to `unknown_vif` |
 
+The C++ enum also numbers three encoder leftovers - `UNSUPPORTED_CODING` (2),
+`UNSUPPORTED_RANGE` (3) and `NEGATIVE_VALUE` (5). The decoder never sets
+them, so they were removed from the Python enum; the gaps in the numbering
+are deliberate and the surviving codes keep their original C++ values.
+
 How to check errors:
 
 ```python
@@ -256,7 +261,7 @@ if code != 0:
 
 ### Enums
 
-`MBUS_CODE` (123 members) and `MBUS_ERROR` (6 members) are `IntEnum`s.
+`MBUS_CODE` (123 members) and `MBUS_ERROR` (3 members) are `IntEnum`s.
 `VIF_DEFS` is the VIF definition table (132 entries: `(code, base, size,
 scalar)`).
 

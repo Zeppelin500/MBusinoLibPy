@@ -9,7 +9,7 @@ Aufruf:
 
 ``--harness`` must contain these three executables:
 
-* ``test_decode``         - the original harness from MBusinoLib/test
+* ``test_decode``         - vendored copy in tools/test_decode.cpp (size_t fix)
 * ``test_decode_header``  - wrapper, only decodeHeader() (tools/test_decode_header.cpp)
 * ``test_decode_records`` - wrapper, raw records (tools/test_decode_records.cpp)
 

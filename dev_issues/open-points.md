@@ -1,7 +1,9 @@
 # Open points - MBusinoLibPy port
 
 Unclean and unresolved things noticed while porting **MBusinoLib 0.10.0** to
-Python. **Every item here is `Status: open`** - nothing has been fixed yet.
+Python. **Every item here is `Status: open`** until it is fixed - the items
+OP-1, OP-8 and OP-9 were fixed on branch `fix/open-points` (see their status
+lines).
 Fundstellen refer to the C++ original (local checkout `~/…/MBusinoLib`,
 upstream <https://github.com/Zeppelin500/MBusinoLib>) unless stated
 otherwise. Line numbers were re-checked against the current checkout on
@@ -22,7 +24,10 @@ port documentation itself is [port-notes.md](port-notes.md).
   (`UNSUPPORTED_VIF`) and line 382 (`BUFFER_OVERFLOW`); line 56 only resets to
   `NO_ERROR`. No assignment writes 2, 3 or 5. (The Python port mirrors the
   same three assignments, see `src/MBusinoLibPy/mbusino_lib.py`.)
-* **Status:** open
+* **Status:** fixed (branch `fix/open-points`): the three unused members were
+  removed from the Python `MBUS_ERROR` enum, the remaining codes keep their
+  values (gaps at 2, 3 and 5 are documented as deliberate), and README,
+  tests and port-notes were updated to match.
 * **Suggestion:** decide between (a) keep the codes for enum-numbering
   compatibility and document them as "never set" (what the Python port does),
   or (b) delete them upstream and treat the renumbering as a breaking change.
@@ -165,7 +170,8 @@ port documentation itself is [port-notes.md](port-notes.md).
     convention (`L ≤ 250`) still hits `L = 250` → wrap.
   * The Python port is **not** affected (`data[1] + 6` is an
     arbitrary-precision int; `fits = packet_size <= byte_count`).
-* **Status:** open
+* **Status:** fixed (harness vendored into `tools/test_decode.cpp` with
+  `size_t packet_size`)
 * **Suggestion:** declare `size_t packet_size = data[1] + 6;` in the
   harness (test-only file, no library impact).
 
@@ -183,7 +189,10 @@ port documentation itself is [port-notes.md](port-notes.md).
     **55** (`packet_size`), "line 53" → **57** (`start_address`), "line
     56-60" → **59-63** (truncation guard), "line 64" → **69** (`data_len`),
     "line 37-40" → **48-51** (too-short check).
-* **Status:** open
+* **Status:** fixed (branch `fix/open-points`): all C++ line-number
+  references in `src/MBusinoLibPy/mbusino_lib.py` were dropped in favour of
+  function names (`decodeRecords()`, `decodeHeader()`, `getError()`,
+  `test_decode.cpp main()`/`parseHex()`, …), so they cannot drift again.
 * **Suggestion:** re-sync the numbers against the current C++ checkout, or
   drop the line numbers and keep only function names (they drift far less).
 
@@ -197,7 +206,11 @@ port documentation itself is [port-notes.md](port-notes.md).
   * line 43 still contains a German comment fragment
     (`(Dokumentationswert, s. enums.py)`) although commit `c2f8ad2` claimed
     the German leftovers were removed.
-* **Status:** open
+* **Status:** fixed (branch `fix/open-points`): the German fragment
+  `(Dokumentationswert, s. enums.py)` was translated; the other two spots
+  had already become English (`readable English error message`,
+  `# English message for the first problem found`) - `grep -rniE
+  'german|deutsch|fuer |für |…' src/` is now empty.
 * **Suggestion:** fix the three spots in `src/` (excluded from this
   documentation pass).
 
