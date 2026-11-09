@@ -62,7 +62,7 @@ var initRunning = false;
 
 var statusEl, statusTextEl, errorBanner, errorTextEl, retryBtn;
 var inputEl, decodeBtn, clearBtn, outputEl, resultBanner;
-var headerCard, headerGrid, recordsCard, recordsBody, recordsEmpty, recordsHeading;
+var headerCard, headerGrid, recordsCard, recordsBody, recordsEmpty, recordsHeading, recordsNote;
 
 /* ------------------------------------------------------------------ */
 /* Runtime status                                                      */
@@ -236,41 +236,63 @@ function flatten(obj) {
   return out;
 }
 
+/* One record -> one table row. Every field the decoder can emit gets a
+   column: name, value, unit, vif, code, subUnit, storage, tariff and the
+   telegramFollow marker. Missing fields render as an empty cell. */
 function renderRecords(records) {
   recordsBody.innerHTML = "";
   recordsCard.hidden = false;
   recordsHeading.textContent = "Records (" + records.length + ")";
+  recordsNote.hidden = true;
+  recordsNote.textContent = "";
   if (records.length === 0) {
     recordsEmpty.hidden = false;
     return;
   }
   recordsEmpty.hidden = true;
 
+  var follows = false;
+
   records.forEach(function (record, index) {
     var row = document.createElement("tr");
 
-    var num = document.createElement("td");
-    num.textContent = String(index + 1);
-    row.appendChild(num);
+    addCell(row, String(index + 1));
+    addCell(row, record.name || "-");
 
-    var name = document.createElement("td");
-    name.textContent = record.name || "-";
-    row.appendChild(name);
-
-    var value = document.createElement("td");
+    // value_scaled for numeric records, value_string for dates/ASCII.
     var raw = record.value_scaled;
     if (raw === null || raw === undefined) {
       raw = record.value_string;
     }
-    value.textContent = raw === null || raw === undefined || raw === "" ? "-" : String(raw);
-    row.appendChild(value);
+    addCell(row, raw === null || raw === undefined || raw === "" ? "-" : String(raw));
 
-    var unit = document.createElement("td");
-    unit.textContent = record.units || "";
-    row.appendChild(unit);
+    addCell(row, record.units || "");
+    addCell(row, record.vif || "");
+    addCell(row, record.code === null || record.code === undefined ? "" : String(record.code));
+    addCell(row, record.subUnit ? String(record.subUnit) : "");
+    addCell(row, record.storage ? String(record.storage) : "");
+    addCell(row, record.tariff ? String(record.tariff) : "");
+    addCell(row, record.telegramFollow ? "→" : "");
+
+    if (record.telegramFollow) {
+      follows = true;
+    }
 
     recordsBody.appendChild(row);
   });
+
+  if (follows) {
+    recordsNote.textContent =
+      "At least one record is marked telegramFollow: this telegram is " +
+      "followed by another one (0x1F end marker).";
+    recordsNote.hidden = false;
+  }
+}
+
+function addCell(row, text) {
+  var cell = document.createElement("td");
+  cell.textContent = text;
+  row.appendChild(cell);
 }
 
 /* ------------------------------------------------------------------ */
@@ -300,6 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
   recordsBody = document.querySelector("#records-table tbody");
   recordsEmpty = document.getElementById("records-empty");
   recordsHeading = document.getElementById("records-heading");
+  recordsNote = document.getElementById("records-note");
 
   decodeBtn.addEventListener("click", decode);
   clearBtn.addEventListener("click", clearAll);
