@@ -15,6 +15,9 @@
   --err-bg: #fdecec;
   --err-border: #eaa5a5;
   --err-text: #7f1d1d;
+  --warn-bg: #fff3e0;
+  --warn-border: #f0a94a;
+  --warn-text: #8a4b00;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
@@ -34,6 +37,9 @@
     --err-bg: #351515;
     --err-border: #7d3b3b;
     --err-text: #ffc9c9;
+    --warn-bg: #3a2a12;
+    --warn-border: #b8781f;
+    --warn-text: #ffd9a0;
   }
 }
 
@@ -381,6 +387,11 @@ textarea::placeholder {
 
 #records-note {
   margin: 0.75rem 0 0;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--warn-border);
+  border-radius: 8px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
   font-size: 0.9rem;
 }
 

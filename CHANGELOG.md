@@ -16,10 +16,10 @@ means "port of MBusinoLib 0.10.0".
 
 ### Changed
 
-- Web decoder (`docs/`): the records table now lists every field the decoder
-  emits (`vif`, `code`, `subUnit`, `storage`, `tariff`, `telegramFollow`) and
-  shows a note when the telegram is followed by another one (`telegramFollow`
-  / `0x1F` marker).
+- Web decoder (`docs/`): the records table lists the user-facing fields
+  (`vif`, `subUnit`, `storage`, `tariff`). When the telegram is followed by
+  another one (`telegramFollow` / `0x1F` marker) an orange note box under the
+  table reports that another telegram is ready for retrieval.
 - README documents the PyPI release: `pip install MBusinoLibPy` is now the
   primary installation path, with the GitHub checkout as the alternative for
   the latest development state.

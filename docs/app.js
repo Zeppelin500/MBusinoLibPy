@@ -236,9 +236,10 @@ function flatten(obj) {
   return out;
 }
 
-/* One record -> one table row. Every field the decoder can emit gets a
-   column: name, value, unit, vif, code, subUnit, storage, tariff and the
-   telegramFollow marker. Missing fields render as an empty cell. */
+/* One record -> one table row. The user-facing fields get a column: name,
+   value, unit, vif, subUnit, storage and tariff. Missing fields render as an
+   empty cell. telegramFollow is not a column - it is reported as a note under
+   the table (it describes the telegram, not the record). */
 function renderRecords(records) {
   recordsBody.innerHTML = "";
   recordsCard.hidden = false;
@@ -268,11 +269,9 @@ function renderRecords(records) {
 
     addCell(row, record.units || "");
     addCell(row, record.vif || "");
-    addCell(row, record.code === null || record.code === undefined ? "" : String(record.code));
     addCell(row, record.subUnit ? String(record.subUnit) : "");
     addCell(row, record.storage ? String(record.storage) : "");
     addCell(row, record.tariff ? String(record.tariff) : "");
-    addCell(row, record.telegramFollow ? "→" : "");
 
     if (record.telegramFollow) {
       follows = true;
@@ -283,8 +282,8 @@ function renderRecords(records) {
 
   if (follows) {
     recordsNote.textContent =
-      "At least one record is marked telegramFollow: this telegram is " +
-      "followed by another one (0x1F end marker).";
+      "This telegram is marked: another telegram is ready for retrieval " +
+      "(0x1F end marker).";
     recordsNote.hidden = false;
   }
 }
