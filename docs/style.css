@@ -371,14 +371,17 @@ textarea::placeholder {
   border-bottom: none;
 }
 
-#records-table td:nth-child(1),
-#records-table td:nth-child(3),
-#records-table td:nth-child(4) {
+#records-table td:not(:nth-child(2)) {
   font-family: var(--mono);
 }
 
 #records-table td:nth-child(1) {
   color: var(--muted);
+}
+
+#records-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
 }
 
 /* ------------------------------------------------------------------ */
