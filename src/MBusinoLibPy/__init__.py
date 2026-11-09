@@ -48,7 +48,7 @@ from .lookup_tables import (
 from .mbusino_lib import MBusinoLib
 from .vif_defs import MBUS_VIF_DEF_NUM, VIF_DEFS
 
-__version__ = "0.10.0"  # corresponds to the version of the C++ original (library.json)
+__version__ = "0.11.0"  # corresponds to the version of the C++ original (library.json)
 
 __all__ = [
     "MBusinoLib",

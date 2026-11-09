@@ -3,13 +3,16 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-The version number tracks the C++ library it was ported from, so **0.10.0**
-means "port of MBusinoLib 0.10.0".
+The version number tracks the C++ library it was ported from, so **0.11.0**
+means "port of MBusinoLib 0.11.0".
 
-## [Unreleased]
+## [0.11.0] - 2026-11-09
 
 ### Added
 
+- Golden harness vendored as `tools/test_decode.cpp` (with the `size_t`
+  frame-size fix). `tools/README.md` builds all wrappers from tracked sources
+  via the vendored `Arduino.h` shim; previously it relied on an untracked file.
 - Web decoder: the original C++ `MBusinoLib` runs alongside the Python port.
   It is compiled to WebAssembly (`tools/wasm/build.sh` → `docs/cpp/mbusino_cpp.*`)
   and both decoders are fed by the same hex input, showing their results side by
@@ -41,6 +44,13 @@ means "port of MBusinoLib 0.10.0".
   frame hints) are now English instead of German, and the last German
   identifiers/comments in tests and tools were translated — everything on
   GitHub is English now.
+- `MBUS_ERROR` cleanup: removed the unused `UNSUPPORTED_CODING` (2),
+  `UNSUPPORTED_RANGE` (3) and `NEGATIVE_VALUE` (5) members (leftovers of the
+  removed AllWize encoder). The remaining values are kept explicit
+  (`NO_ERROR = 0`, `BUFFER_OVERFLOW = 1`, `UNSUPPORTED_VIF = 4`); decoding
+  output is unchanged.
+- Stale C++ line numbers in source comments/docstrings replaced with function
+  names (drift-proof); the last German fragment in `src/` translated.
 
 ## [0.10.0] - 2026-11-07
 

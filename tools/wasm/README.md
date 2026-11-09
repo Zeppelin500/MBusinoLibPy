@@ -15,7 +15,7 @@ Output (committed, because GitHub Pages serves `docs/` from `main`):
 - `docs/cpp/mbusino_cpp.js`  – Emscripten glue (MODULARIZE factory)
 - `docs/cpp/mbusino_cpp.wasm`
 
-Pinned by default: MBusinoLib `d9acd52` (v0.10.0), ArduinoJson `v7.4.3` (MIT).
+Pinned by default: MBusinoLib `142bd98` (v0.11.0), ArduinoJson `v7.4.3` (MIT).
 Override with `MBUSINO_REF` / `ARDUINOJSON_REF`, or point `MBUSINO_SRC` at a
 local MBusinoLib checkout.
 
