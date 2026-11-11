@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MBusinoLibPy - Web Decoder</title>
-  <meta name="description" content="Browser-based test page decoding M-Bus telegrams with the Python port and the original C++ library side by side.">
+  <meta name="description" content="Browser-based test page decoding M-Bus telegrams with the Python port, the original C++ library and the Rust port side by side.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
     <div class="wrap">
       <h1>MBusinoLibPy &middot; Web Decoder</h1>
       <p class="tagline">
-        Decodes an M-Bus telegram with the Python port <em>and</em> the original
-        C++ library, side by side.
+        Decodes an M-Bus telegram with the Python port, the original C++
+        library <em>and</em> the Rust port, side by side.
         <a href="https://github.com/Zeppelin500/MBusinoLibPy">GitHub repository</a>
       </p>
       <p id="runtime-status" class="runtime-status" role="status" aria-live="polite">
@@ -39,7 +39,7 @@
       <textarea id="hex-input" rows="7" spellcheck="false" autocapitalize="off"
         autocomplete="off" placeholder="68 C1 C1 68 08 00 72 ... 75 16"></textarea>
       <div class="controls">
-        <button type="button" id="decode-btn" class="btn btn-primary" disabled>Decode both</button>
+        <button type="button" id="decode-btn" class="btn btn-primary" disabled>Decode all</button>
         <button type="button" id="clear-btn" class="btn">Clear</button>
         <span class="hint shortcut-hint">Ctrl/Cmd + Enter decodes</span>
       </div>
@@ -68,6 +68,13 @@
           </header>
           <div class="panel-body"></div>
         </section>
+        <section class="panel" id="panel-rust" aria-labelledby="panel-rust-title">
+          <header class="panel-head">
+            <h3 id="panel-rust-title">Rust port</h3>
+            <span class="tag tag-rust">WASM</span>
+          </header>
+          <div class="panel-body"></div>
+        </section>
       </div>
     </section>
   </main>
@@ -77,7 +84,8 @@
       <p>
         Decoding runs entirely in your browser - the Python port via
         <a href="https://pyodide.org/">Pyodide</a>, the original C++ library via
-        WebAssembly (<a href="https://emscripten.org/">Emscripten</a>).
+        WebAssembly (<a href="https://emscripten.org/">Emscripten</a>) and the
+        Rust port via WebAssembly (<a href="https://www.rust-lang.org/">rustc</a>).
         No telegram data leaves this device.
       </p>
       <p>
@@ -89,6 +97,7 @@
 
   <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
   <script src="cpp/mbusino_cpp.js"></script>
+  <script src="rust/mbusino_rs.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

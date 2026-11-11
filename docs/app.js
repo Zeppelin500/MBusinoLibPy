@@ -1,10 +1,12 @@
 /* MBusinoLibPy Web Decoder - plain JavaScript, no framework, no build step.
  *
- * Two decoders run on the same input, side by side:
+ * Three decoders run on the same input, side by side:
  *   - Python port via Pyodide (sources fetched from jsDelivr @main, so the
  *     page always tests the current upstream source),
  *   - the original C++ MBusinoLib compiled to WebAssembly (docs/cpp/, built
- *     by tools/wasm/build.sh).
+ *     by tools/wasm/build.sh),
+ *   - the Rust port (mbusino-lib-rs) compiled to WebAssembly (docs/rust/,
+ *     built by tools/wasm/build_rust.sh).
  */
 var LIB_BASE_URL = "https://cdn.jsdelivr.net/gh/Zeppelin500/MBusinoLibPy@main/src/MBusinoLibPy/";
 
@@ -59,7 +61,8 @@ var BOOTSTRAP_PY = [
 /* Engine state. Each engine exposes decode(hex) -> JSON string once ready. */
 var engines = {
   python: { ready: false, failed: false, decode: null },
-  cpp: { ready: false, failed: false, decode: null }
+  cpp: { ready: false, failed: false, decode: null },
+  rust: { ready: false, failed: false, decode: null }
 };
 
 var pyodide = null;
@@ -67,7 +70,7 @@ var initRunning = false;
 
 var statusEl, statusTextEl, errorBanner, errorTextEl, retryBtn;
 var inputEl, decodeBtn, clearBtn, outputEl;
-var panelPython, panelCpp;
+var panelPython, panelCpp, panelRust;
 
 /* ------------------------------------------------------------------ */
 /* Runtime status                                                      */
@@ -80,21 +83,22 @@ function setStatus(state, text) {
 }
 
 function updateStatus() {
-  var py = engines.python;
-  var cc = engines.cpp;
-  if (py.ready && cc.ready) {
+  var list = [engines.python, engines.cpp, engines.rust];
+  var ready = list.filter(function (e) { return e.ready; }).length;
+  var failed = list.filter(function (e) { return e.failed; }).length;
+  var settled = list.filter(function (e) { return e.ready || e.failed; }).length;
+  if (ready === list.length) {
     setStatus("ready", "Ready");
-  } else if (py.failed && cc.failed) {
-    setStatus("error", "Both runtimes failed to load");
-  } else if (py.ready || cc.ready || py.failed || cc.failed) {
+  } else if (failed === list.length) {
+    setStatus("error", "All runtimes failed to load");
+  } else if (settled > 0) {
     setStatus("loading", "One runtime still loading…");
   } else {
     setStatus("loading", "Loading runtimes… (Python ~10 MB, C++ ~70 KB)");
   }
-  // Decode needs at least one working engine, and both to be settled
-  // (ready or failed) so "both decode at once" is meaningful.
-  var settled = (py.ready || py.failed) && (cc.ready || cc.failed);
-  decodeBtn.disabled = !settled || !(py.ready || cc.ready);
+  // Decode needs at least one working engine, and all to be settled
+  // (ready or failed) so "decode all at once" is meaningful.
+  decodeBtn.disabled = settled !== list.length || ready === 0;
 }
 
 function showError(message) {
@@ -167,6 +171,26 @@ function initCpp() {
     .then(updateStatus);
 }
 
+function initRust() {
+  engines.rust.failed = false;
+  if (typeof createMBusinoRust !== "function") {
+    engines.rust.failed = true;
+    showError("The Rust WebAssembly module could not be loaded.");
+    updateStatus();
+    return;
+  }
+  createMBusinoRust({ locateFile: function (path) { return "rust/" + path; } })
+    .then(function (module) {
+      engines.rust.decode = module.decode;
+      engines.rust.ready = true;
+    })
+    .catch(function (err) {
+      engines.rust.failed = true;
+      showError(String((err && err.message) || err));
+    })
+    .then(updateStatus);
+}
+
 /* ------------------------------------------------------------------ */
 /* Decoding                                                            */
 /* ------------------------------------------------------------------ */
@@ -180,6 +204,7 @@ function decode() {
   outputEl.hidden = false;
   runEngine(panelPython, "python", hex);
   runEngine(panelCpp, "cpp", hex);
+  runEngine(panelRust, "rust", hex);
 }
 
 function runEngine(panel, name, hex) {
@@ -204,6 +229,8 @@ function runEngine(panel, name, hex) {
   }
   if (name === "python") {
     renderPythonResult(panel, result);
+  } else if (name === "rust") {
+    renderRustResult(panel, result);
   } else {
     renderCppResult(panel, result);
   }
@@ -239,6 +266,20 @@ function renderCppResult(panel, result) {
     bannerDetail: success
       ? "Original C++ library: header + " + count + " records decoded."
       : "The original library reported error code " + result.error_code + ".",
+    header: result.header || {},
+    records: result.records || []
+  });
+}
+
+function renderRustResult(panel, result) {
+  var success = result.header_ok === true && result.error_code === 0;
+  var count = result.records ? result.records.length : 0;
+  renderPanel(panel, {
+    bannerClass: success ? "banner-ok" : "banner-fail",
+    bannerTitle: success ? "Decoded" : "Decode error",
+    bannerDetail: success
+      ? "Rust port: header + " + count + " records decoded."
+      : "The Rust port reported error code " + result.error_code + ".",
     header: result.header || {},
     records: result.records || []
   });
@@ -435,6 +476,7 @@ document.addEventListener("DOMContentLoaded", function () {
   outputEl = document.getElementById("output");
   panelPython = document.querySelector("#panel-python .panel-body");
   panelCpp = document.querySelector("#panel-cpp .panel-body");
+  panelRust = document.querySelector("#panel-rust .panel-body");
 
   decodeBtn.addEventListener("click", decode);
   clearBtn.addEventListener("click", clearAll);
@@ -442,6 +484,7 @@ document.addEventListener("DOMContentLoaded", function () {
     hideError();
     if (!engines.python.ready) { initPython(); }
     if (!engines.cpp.ready) { initCpp(); }
+    if (!engines.rust.ready) { initRust(); }
   });
 
   inputEl.addEventListener("keydown", function (event) {
@@ -465,4 +508,5 @@ document.addEventListener("DOMContentLoaded", function () {
   updateStatus();
   initPython();
   initCpp();
+  initRust();
 });

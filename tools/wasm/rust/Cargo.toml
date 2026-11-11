@@ -1,0 +1,18 @@
+[package]
+name = "mbusino_rs_wasm"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "WebAssembly wrapper around mbusino-lib-rs for the docs/ web decoder"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# The Rust port, pinned to a revision (fetched by cargo at build time, like
+# the C++ wrapper fetches MBusinoLib from GitHub).
+mbusino-lib-rs = { git = "https://github.com/Zeppelin500/mbusino-lib-rs", rev = "c60f5615363134f89fb0ddc316c53ede96acbd8c" }
+
+[profile.release]
+opt-level = "s"
+lto = true
