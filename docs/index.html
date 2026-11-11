@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MBusinoLibPy - Web Decoder</title>
+  <title>MBusinoLib - M-Bus web decoder</title>
   <meta name="description" content="Browser-based test page decoding M-Bus telegrams with the Python port, the original C++ library and the Rust port side by side.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
-      <h1>MBusinoLibPy &middot; Web Decoder</h1>
+      <h1>MBusinoLib &middot; M-Bus web decoder</h1>
       <p class="tagline">
         Decodes an M-Bus telegram with the Python port, the original C++
         library <em>and</em> the Rust port, side by side.
@@ -33,7 +33,7 @@
       <h2 id="input-heading">Telegram input</h2>
       <p class="hint">
         Paste an M-Bus telegram as hex. Spaces, commas, <code>0x</code> prefixes and
-        newlines are all accepted. Both decoders run on the same input.
+        newlines are all accepted. All three decoders run on the same input.
       </p>
       <label class="visually-hidden" for="hex-input">Telegram hex</label>
       <textarea id="hex-input" rows="7" spellcheck="false" autocapitalize="off"
@@ -54,24 +54,33 @@
     <section id="output" aria-labelledby="output-heading" hidden>
       <h2 id="output-heading" class="visually-hidden">Decoding result</h2>
       <div class="panels">
-        <section class="panel" id="panel-python" aria-labelledby="panel-python-title">
-          <header class="panel-head">
-            <h3 id="panel-python-title">Python port</h3>
-            <span class="tag tag-py">Pyodide</span>
-          </header>
-          <div class="panel-body"></div>
-        </section>
         <section class="panel" id="panel-cpp" aria-labelledby="panel-cpp-title">
           <header class="panel-head">
             <h3 id="panel-cpp-title">C++ original</h3>
-            <span class="tag tag-cpp">WASM</span>
+            <span class="panel-meta">
+              <a class="panel-repo" href="https://github.com/Zeppelin500/MBusinoLib" title="Zeppelin500/MBusinoLib">repo &#8599;</a>
+              <span class="tag tag-cpp">WASM</span>
+            </span>
           </header>
           <div class="panel-body"></div>
         </section>
         <section class="panel" id="panel-rust" aria-labelledby="panel-rust-title">
           <header class="panel-head">
             <h3 id="panel-rust-title">Rust port</h3>
-            <span class="tag tag-rust">WASM</span>
+            <span class="panel-meta">
+              <a class="panel-repo" href="https://github.com/Zeppelin500/mbusino-lib-rs" title="Zeppelin500/mbusino-lib-rs">repo &#8599;</a>
+              <span class="tag tag-rust">WASM</span>
+            </span>
+          </header>
+          <div class="panel-body"></div>
+        </section>
+        <section class="panel" id="panel-python" aria-labelledby="panel-python-title">
+          <header class="panel-head">
+            <h3 id="panel-python-title">Python port</h3>
+            <span class="panel-meta">
+              <a class="panel-repo" href="https://github.com/Zeppelin500/MBusinoLibPy" title="Zeppelin500/MBusinoLibPy">repo &#8599;</a>
+              <span class="tag tag-py">Pyodide</span>
+            </span>
           </header>
           <div class="panel-body"></div>
         </section>
