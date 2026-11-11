@@ -376,6 +376,26 @@ textarea::placeholder {
   color: #c1440e;
 }
 
+.panel-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-repo {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  color: var(--muted);
+  border-bottom: 1px dotted currentColor;
+}
+
+.panel-repo:hover {
+  color: var(--accent);
+  border-bottom-color: currentColor;
+}
+
 /* Inside a panel the banner/cards carry no extra top margin. */
 .panel .banner {
   margin-top: 0;
