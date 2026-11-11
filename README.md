@@ -15,8 +15,10 @@ GPL-3.0).
 * **No runtime dependencies** - Python ≥ 3.9, standard library only.
 * **Supports any M-Bus slave** - there is no fixed device list: any slave that
   answers with a standard RSP_UD telegram is supported.
-* **Try it live in the browser** - a Pyodide-based web decoder is online at
-  <https://zeppelin500.github.io/MBusinoLibPy/> (source: [docs/](docs/)).
+* **Try it live in the browser** - the web decoder at
+  <https://zeppelin500.github.io/MBusinoLibPy/> (source: [docs/](docs/))
+  decodes a telegram with the Python port, the original C++ library and the
+  Rust port side by side.
 * Validates a *complete* frame (start/stop byte, declared length, checksum)
   before decoding header and records.
 * Known record types come with readable names, units and Home Assistant

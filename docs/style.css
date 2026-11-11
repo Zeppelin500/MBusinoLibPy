@@ -371,6 +371,11 @@ textarea::placeholder {
   color: var(--accent);
 }
 
+.tag-rust {
+  border-color: #c1440e;
+  color: #c1440e;
+}
+
 /* Inside a panel the banner/cards carry no extra top margin. */
 .panel .banner {
   margin-top: 0;

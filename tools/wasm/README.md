@@ -1,7 +1,8 @@
 # tools/wasm - C++ MBusinoLib → WebAssembly
 
-Builds the **original C++ `MBusinoLib`** into WebAssembly so the docs/ test
-page can show its output next to the Python port.
+Builds the **original C++ `MBusinoLib`** and the **Rust port** into
+WebAssembly so the docs/ test page can show their output next to the Python
+port.
 
 ## Build
 
@@ -14,6 +15,20 @@ Output (committed, because GitHub Pages serves `docs/` from `main`):
 
 - `docs/cpp/mbusino_cpp.js`  – Emscripten glue (MODULARIZE factory)
 - `docs/cpp/mbusino_cpp.wasm`
+
+## Rust port
+
+The `docs/` page also decodes with the **Rust port**
+[`mbusino-lib-rs`](https://github.com/Zeppelin500/mbusino-lib-rs), compiled to
+WebAssembly. Deliberately **no wasm-bindgen**: plain C-ABI exports plus the
+loader `docs/rust/mbusino_rs.js`.
+
+```bash
+tools/wasm/build_rust.sh        # needs a Rust toolchain (cargo)
+```
+
+Output (committed): `docs/rust/mbusino_rs.wasm`. The wrapper crate lives in
+`tools/wasm/rust/` and pins the library revision in its `Cargo.toml`.
 
 Pinned by default: MBusinoLib `142bd98` (v0.11.0), ArduinoJson `v7.4.3` (MIT).
 Override with `MBUSINO_REF` / `ARDUINOJSON_REF`, or point `MBUSINO_SRC` at a
